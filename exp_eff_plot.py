@@ -10,7 +10,7 @@ import matplotlib.pylab as plt
 
 
 from utils.plot import plot_errors
-from mesh_sizes import mesh_sizes
+from exp_eff_mesh import mesh_sizes
 
 
 with open('measurements.pkl') as f:

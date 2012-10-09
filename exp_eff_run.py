@@ -12,7 +12,7 @@ from time import clock
 from methods import *
 from kernels import *
 
-from mesh_sizes import mesh_sizes
+from exp_eff_mesh import mesh_sizes
 
 ###############################################################################
 # config

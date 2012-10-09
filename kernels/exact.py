@@ -1,14 +1,12 @@
 """Exact kernel (test kernel with a known solution)."""
 
-from math import sqrt
-from stats import dnorm, pnorm
+from numpy import sqrt, exp
 from scipy.integrate import quad
+from utils.stats import dnorm, pnorm
+from base import Kernel
 
-import numpy as np
 
-import base
-
-class Exact(base.Kernel):
+class Exact(Kernel):
 
     def __init__(self):
 
@@ -38,13 +36,13 @@ class Exact(base.Kernel):
 
         self.increment_count(x, y)
 
-        return np.exp(-self._theta * x**2) * dnorm(y, mu=x+self._mu, sd=sqrt(self._ss))
+        return exp(-self._theta * x**2) * dnorm(y, mu=x+self._mu, sd=sqrt(self._ss))
 
     #### y-integrable form
 
     def s(self, x, t):
 
-        return np.exp(-self._theta * x**2)
+        return exp(-self._theta * x**2)
 
 
     def mu(self, x, t):

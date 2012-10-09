@@ -1,21 +1,18 @@
 """Zuidema Parashorea Chinensis kernel."""
 
-import numpy as np
-
-from stats import dnorm, dtnorm
-from numpy import sqrt, exp
-
-import base
+from numpy import sqrt, exp, dot, zeros, asarray
+from utils.stats import dnorm, dtnorm
+from base import Kernel
 
 
-class Zuidema(base.Kernel):
+class Zuidema(Kernel):
 
     name = 'Zuidema'
     time_dependent = False
 
     def __init__(self):
 
-        base.Kernel.__init__(self)
+        Kernel.__init__(self)
 
         self.L =   1.0
         self.U = 150.0
@@ -27,7 +24,7 @@ class Zuidema(base.Kernel):
         self.k_st_params     = [ -3.232, 0.146, 0.829 ]       # b, mu, sdl
         self.k_ts_params     = [ 0.118, 1.078, 0.369 ]        # a54, mu, sd
 
-        self.k_ss = np.asarray([[ 0.700, 0.0,   0.0,   0.0   ],
+        self.k_ss = asarray([[ 0.700, 0.0,   0.0,   0.0   ],
                                 [ 0.101, 0.704, 0.0,   0.0   ],
                                 [ 0.0,   0.136, 0.793, 0.0   ],
                                 [ 0.0,   0.0,   0.096, 0.819 ]])
@@ -71,7 +68,7 @@ class Zuidema(base.Kernel):
     def k_st(self, x):
 
         N = self.N
-        A = np.zeros((4, N))
+        A = zeros((4, N))
 
         s = self.survival_params[0]
         b0, b1, kids = self.k_st_params
@@ -86,7 +83,7 @@ class Zuidema(base.Kernel):
 
         L = self.L
         N = self.N
-        A = np.zeros((N, 4))
+        A = zeros((N, 4))
 
         a54, mu, sd = self.k_ts_params
         
@@ -102,13 +99,13 @@ class Zuidema(base.Kernel):
         self.N = len(self.method.x)
 
         N = self.N
-        self.x = np.zeros(4+N)
+        self.x = zeros(4+N)
         self.x[4:] = self.method.x
-        self.x[:4] = np.asarray([ -4, -3, -2, -1 ])
+        self.x[:4] = asarray([ -4, -3, -2, -1 ])
 
         self.method.sample(self, 0) # sample continuous part of myself
 
-        self.A = np.zeros((N+4, N+4))
+        self.A = zeros((N+4, N+4))
         self.A[:4, :4] = self.k_ss
         self.A[:4, 4:] = self.k_st(self.method.x)
         self.A[4:, :4] = self.k_ts(self.method.x)
@@ -117,12 +114,12 @@ class Zuidema(base.Kernel):
 
     def population(self, n):
 
-        return sum(n[:4]) + np.dot(self.method.P, n[4:])
+        return sum(n[:4]) + dot(self.method.P, n[4:])
 
 
     def first_projection(self):
 
-        n1 = np.zeros(4+self.N)
+        n1 = zeros(4+self.N)
 
         if callable(self.n0):
             n0 = self.n0
@@ -135,7 +132,7 @@ class Zuidema(base.Kernel):
         
 
     def project(self, n0):
-        return np.dot(self.A, n0)
+        return dot(self.A, n0)
 
 
     @property

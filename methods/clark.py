@@ -18,7 +18,7 @@ import logging
 import numpy as np
 import base
 
-from stats import pnorm
+from utils.stats import pnorm
 from math import sqrt
 
 import scipy.integrate

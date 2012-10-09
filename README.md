@@ -4,26 +4,31 @@ PyIPM
 Python IPM framework.
 
 This repository also contains numerical experiments and plotting
-routines for two projects:
+routines for several projects:
 
-1. The "A guide to efficient integration schemes for integral
-   projection models (IPMs)" paper analysing the accuracy and
+1. The 'A guide to efficient integration schemes for integral
+   projection models (IPMs)' paper analysing the accuracy and
    efficiency of various integration schemes by Andria Dawson and
-   Matthew Emmett;
+   Matthew Emmett.
+
+   To run all of the numerical experiments for this paper:
+
+   $ python exp_eff_run.py
+
+   To generate the plots:
+
+   $ python exp_eff_plot.py
+
 
 2. The 'ARTR' project by the Clark Lab at Duke University.
 
+   To run the ARTR experiment:
 
-To run all of the numerical experiments for the integration paper:
+   $ python exp_artr.py
 
-$ python project.py
-
-To generate the plots:
-
-$ python plot.py
+3. 
 
 
-To run the 'ARTR' experiment:
 
-$ python artr.py
+
 

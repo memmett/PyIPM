@@ -1,16 +1,15 @@
 """Easterling, Ellner and Dixon IPM kernel."""
 
-from stats import dnorm
 from numpy import sqrt, exp
+from utils.stats import dnorm
+from base import Kernel
 
-import base
 
-
-class EED(base.Kernel):
+class EED(Kernel):
 
     def __init__(self):
 
-        base.Kernel.__init__(self)
+        Kernel.__init__(self)
 
         self.L =  0.0
         self.U = 10.0

@@ -4,13 +4,13 @@ import logging
 
 import numpy as np
 
-from stats import dnorm
 from numpy import sqrt, exp, log
-
-import base
 from utils.io import read_csv
+from utils.stats import dnorm
 
-class ARTTRI(base.Kernel):
+from base import Kernel
+
+class ARTTRI(Kernel):
 
     L = -8.0
     U = 18.0
@@ -21,7 +21,7 @@ class ARTTRI(base.Kernel):
 
     def __init__(self):
         
-        base.Kernel.__init__(self)
+        Kernel.__init__(self)
 
         self.time_dependent = True
 
@@ -106,7 +106,7 @@ class ARTTRI(base.Kernel):
     
     def setup(self, method, N):
 
-        base.Kernel.setup(self, method, N)
+        Kernel.setup(self, method, N)
 
         self.row = 1
 
@@ -115,7 +115,7 @@ class ARTTRI(base.Kernel):
 
     def update(self, t):
 
-        base.Kernel.update(self, t)
+        Kernel.update(self, t)
 
         # set row for looking up climate data
         self.row = max(0, t - int(self.years[0]) - 1)

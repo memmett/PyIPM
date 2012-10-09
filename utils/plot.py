@@ -83,7 +83,7 @@ def plot_errors(errors, mesh_sizes, linestyles=linestyles):
         plt.ylabel('absolute error')
         plt.legend(bbox_to_anchor=(0.5, 1.1), loc=8,
                    ncol=3, borderaxespad=0.)
-        plt.savefig('plots/ErrorMesh_%s.pdf' % kernel)
+        plt.savefig('plots/ErrorMesh_%s.png' % kernel)
 
         # error vs computational cost
         plt.figure(figsize=(7, 6))
@@ -100,7 +100,7 @@ def plot_errors(errors, mesh_sizes, linestyles=linestyles):
         plt.ylabel('absolute error')
         plt.legend(bbox_to_anchor=(0.5, 1.1), loc=8,
                    ncol=3, borderaxespad=0.)
-        plt.savefig('plots/ErrorCost_%s.pdf' % kernel)
+        plt.savefig('plots/ErrorCost_%s.png' % kernel)
 
 
         # error vs run time
@@ -121,4 +121,4 @@ def plot_errors(errors, mesh_sizes, linestyles=linestyles):
         plt.ylabel('absolute error')
         plt.legend(bbox_to_anchor=(0.5, 1.1), loc=8,
                    ncol=3, borderaxespad=0.)
-        plt.savefig('plots/ErrorTime_%s.pdf' % kernel)
+        plt.savefig('plots/ErrorTime_%s.png' % kernel)
