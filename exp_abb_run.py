@@ -10,12 +10,14 @@ import numpy as np
 from methods import MidPoint
 from kernels.abb import ABBSW, ABBAW
 
+import matplotlib.pylab as plt
+
 
 ###############################################################################
 # config
 
 N = 400
-L = 0.0
+L = 10.0
 U = 300.0
 
 T = range(0, 10)
@@ -49,36 +51,35 @@ logger.addHandler(info)
 
 
 ###############################################################################
-# test
-
-# n = np.zeros((2, len(sw.x)))
-# n[0] = np.exp(-(sw.x - U/2)**2/(U/8)**2)
-# n[1] = 0.5 * np.exp(-(sw.x - U/2)**2/(U/8)**2)
-
-# import matplotlib.pylab as plt
-# plt.plot(sw.x, n[0], '-r')
-# plt.plot(sw.x, n[1], '-b')
-# plt.show()
-
-
-# set current populations and resample
-# for k in [ sw, aw ]:
-#     k.update(n[0], n[1], 0)
-
-# print sw.sw_pct(np.array([100.0, 101.0]))
-
-
-###############################################################################
 # main
 
-logging.info("RUN STARTED AT: %s", time.asctime())
+logging.info("start:  %s", time.asctime())
 logging.info("method: %s", method.name)
 
 n = np.zeros((len(T), 2, len(sw.x)))
 
 # XXX: initial condition
+M = 0.5 * (L + U)
+n[0, 0] = np.exp(-(sw.x - M)**2/(M/4)**2)
+n[0, 1] = 0.5 * np.exp(-(sw.x - M)**2/(M/4)**2)
+
+# for k in [ sw, aw ]:
+#     k.update(n[0, 0], n[0, 1], 0)
+# print sw.sw_pct(np.array([0.0]))
+# print sw.sw_pct(np.array([M]))
+# raise SystemExit
+
+
+
+plt.plot(n[0, 0], '-b')
+plt.plot(n[0, 1], '-r')
+plt.title(str(0))
+plt.figure()
+plt.show()
 
 for j, t in enumerate(T[1:]):
+
+    logging.info('step: %d (%s)', t, time.asctime())
 
     # set current populations and resample
     for k in [ sw, aw ]:
@@ -88,3 +89,8 @@ for j, t in enumerate(T[1:]):
     n[j+1, 0] = sw.project(n[j, 0])
     n[j+1, 1] = aw.project(n[j, 1])
 
+
+    plt.plot(n[j+1, 0], '-b')
+    plt.plot(n[j+1, 1], '-r')
+    plt.title(str(j+1))
+    plt.figure()
