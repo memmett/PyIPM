@@ -28,53 +28,57 @@ class ABB(Kernel):
     def update(self, nsw, naw, t, **kwargs):
         self.nsw = nsw
         self.naw = naw
+
+        # cache sw_pct, sw_psd, aw_pba etc...
+        ix = np.array(range(len(self.x)))
+        self._sw_pct  = self.sw_pct(self.x, ix)
+        self._sw_psd  = self.sw_psd(self.x, ix)
+        self._aw_pba  = self.aw_pba(self.x, ix)
+        self._net_pba = self.net_pba(self.x, ix)                        
+        
         self.method.sample(self, t)
 
 
-    def sw_pct(self, x):
+    def sw_pct(self, x, ix):
         """Return number of Spruce with dbh greater than *x*."""
 
         r = np.empty(x.shape)
 
-        for i in xrange(len(x)):
-            idx = self.x >= x[i]
-            r[i] = np.dot(self.method.P[idx], self.nsw[idx]) 
+        for i, j in enumerate(ix):
+            r[i] = np.dot(self.method.P[j:], self.nsw[j:]) 
 
         return r / 1e3          # convert # / ha to # / 10 m^2
 
 
-    def sw_psd(self, x):
+    def sw_psd(self, x, ix):
         """Return Spruce sum-of-diameters for Spruce with dbh greater than *x*."""
 
         r = np.empty(x.shape)
 
-        for i in xrange(len(x)):
-            idx = self.x >= x[i]
-            r[i] = np.dot(self.method.P[idx], self.nsw[idx] * self.x[idx])
+        for i, j in enumerate(ix):
+            r[i] = np.dot(self.method.P[j:], self.nsw[j:] * self.x[j:])
 
         return r / 1e3          # convert mm / ha to m / ha
 
 
-    def aw_pba(self, x):
+    def aw_pba(self, x, ix):
         """Return Aspen basal area for Aspen with dbh greater than *x*."""
 
         r = np.empty(x.shape)
 
-        for i in xrange(len(x)):
-            idx = self.x >= x[i]
-            r[i] = np.dot(self.method.P[idx], self.naw[idx] * pi * (self.x[idx]/2.0)**2)
+        for i, j in enumerate(ix):
+            r[i] = np.dot(self.method.P[j:], self.naw[j:] * pi * (self.x[j:]/2.0)**2)
 
         return r / 1e6          # convert mm^2 / ha to m^2 / ha
 
 
-    def net_pba(self, x):
+    def net_pba(self, x, ix):
         """Return total basal area for trees with dbh greater than *x*."""
 
         r = np.empty(x.shape)
 
-        for i in xrange(len(x)):
-            idx = self.x >= x[i]
-            r[i] = np.dot(self.method.P[idx], (self.naw[idx] + self.nsw[idx]) * pi * (self.x[idx]/2.0)**2)
+        for i, j in enumerate(ix):
+            r[i] = np.dot(self.method.P[j:], (self.naw[j:] + self.nsw[j:]) * pi * (self.x[j:]/2.0)**2)
 
         return r / 1e6          # convert mm^2 / ha to m^2 / ha
 
@@ -96,12 +100,12 @@ class ABBSW(ABB):
 
 
 
-    def kernel(self, x, y, t):
+    def kernel(self, x, y, t, ix=None, **kwargs):
 
         one    = np.ones(len(x))
         dbh    = x
-        sw_pct = self.sw_pct(x)
-        aw_pba = self.aw_pba(x)
+        sw_pct = self._sw_pct[ix]
+        aw_pba = self._aw_pba[ix]
 
         # growth
         xi = np.vstack([ one, dbh, dbh**2, sw_pct, aw_pba ])
@@ -133,14 +137,14 @@ class ABBAW(ABB):
         self.sd = sqrt(3.687244)
 
 
-    def kernel(self, x, y, t):
+    def kernel(self, x, y, t, ix=None, **kwargs):
 
         one     = np.ones(len(x))
         dbh     = x
         di      = y - x
-        sw_psd  = self.sw_psd(x)
-        aw_pba  = self.aw_pba(x)
-        net_pba = self.net_pba(x)
+        sw_psd  = self._sw_psd[ix]
+        aw_pba  = self._aw_pba[ix]
+        net_pba = self._net_pba[ix]
 
         # growth
         xi = np.vstack([ one, dbh, aw_pba, sw_psd ])

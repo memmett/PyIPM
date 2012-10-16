@@ -21,9 +21,11 @@ class MidPoint(base.Method):
 
         dx = (U - L) / N
 
+        ix = np.array(range(N))
+
         A = np.zeros((N, N))
-        for i in range(N):
-            A[i, :] = dx * kernel.kernel(x, x[i], t)
+        for i in xrange(N):
+            A[i, :] = dx * kernel.kernel(x, x[i], t, ix=ix, iy=i)
 
         self.A = A
 
