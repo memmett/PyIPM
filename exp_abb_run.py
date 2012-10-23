@@ -1,7 +1,6 @@
 """Alberta boreal SW and AW competition experiment."""
 
-import cPickle as pickle
-import collections
+
 import logging
 import time
 
@@ -36,7 +35,7 @@ for k in [ sw, aw ]:
     k.setup(method, N)
 
     k.kernel_sw = sw
-    k.kernel_aw = aw    
+    k.kernel_aw = aw
 
 # create root logger (debug messages to project.log)
 logging.basicConfig(filename='abb.log',
@@ -58,43 +57,46 @@ logging.info("method: %s", method.name)
 
 n = np.zeros((len(T), 2, len(sw.x)))
 
-# XXX: initial condition
-M = 0.5 * (L + U)
-n[0, 0] = 5 * np.exp(-(sw.x - M)**2/(M/4)**2)
-n[0, 1] = 10 * np.exp(-(sw.x - M)**2/(M/4)**2)
+# # XXX: initial condition
+# M = 0.5 * (L + U)
+# n[0, 0] = 5 * np.exp(-(sw.x - M)**2/(M/4)**2)
+# n[0, 1] = 10 * np.exp(-(sw.x - M)**2/(M/4)**2)
 
-# for k in [ sw, aw ]:
-#     k.update(n[0, 0], n[0, 1], 0)
-# print sw.sw_pct(np.array([0.0]))
-# print sw.sw_pct(np.array([M]))
-# raise SystemExit
-
-plt.figure()
-plt.plot(n[0, 0], '-b')
-plt.plot(n[0, 1], '-r')
-plt.title(str(0))
+# plt.figure()
+# plt.plot(n[0, 0], '-b')
+# plt.plot(n[0, 1], '-r')
+# plt.title(str(0))
 
 for j, t in enumerate(T[1:]):
 
     logging.info('step: %d (%s)', t, time.asctime())
 
-    # set current populations and resample
-    for k in [ sw, aw ]:
-        k.update(n[j, 0], n[j, 1], t)
-
     # project
-    n[j+1, 0] = sw.project(n[j, 0])
-    n[j+1, 1] = aw.project(n[j, 1])
+    if j == 0:
+        for k in [ sw, aw ]:
+            k.sw0 = sw.n0
+            k.aw0 = aw.n0
+
+        n[j+1, 0] = sw.first_projection()
+        n[j+1, 1] = aw.first_projection()
+
+    else:
+        # set current populations and resample
+        for k in [ sw, aw ]:
+            k.update(n[j, 0], n[j, 1], t)
+
+        n[j+1, 0] = sw.project(n[j, 0])
+        n[j+1, 1] = aw.project(n[j, 1])
 
 
     plt.figure()
     plt.plot(n[j+1, 0], '-b', label='spruce')
     plt.plot(n[j+1, 1], '-r', label='aspen')
     plt.xlabel('dbh (mm)')
-    plt.ylabel('stems per hectare')    
+    plt.ylabel('stems per hectare')
     plt.title('year ' + str(j+1))
     plt.savefig('plots/projection_%02d.pdf' % (j+1))
-    
+
 
 
 psw = [ sw.population(n[j, 0]) for j in range(len(T)) ]
