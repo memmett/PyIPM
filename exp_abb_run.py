@@ -17,7 +17,7 @@ import matplotlib.pylab as plt
 
 N = 400
 L = 10.0
-U = 300.0
+U = 500.0
 
 T = range(0, 10)
 
@@ -77,8 +77,11 @@ for j, t in enumerate(T[1:]):
             k.sw0 = sw.n0
             k.aw0 = aw.n0
 
-        n[j+1, 0] = sw.first_projection()
-        n[j+1, 1] = aw.first_projection()
+        n[j, 0] = sw.method.histogram(sw.n0) / sw.plot_size * 1e4 # convert spp to sph
+        n[j, 1] = aw.method.histogram(aw.n0) / aw.plot_size * 1e4 # convert spp to sph
+
+        n[j+1, 0] = sw.first_projection() / sw.plot_size * 1e4 # convert spp to sph
+        n[j+1, 1] = aw.first_projection() / aw.plot_size * 1e4 # convert spp to sph
 
     else:
         # set current populations and resample
@@ -90,8 +93,8 @@ for j, t in enumerate(T[1:]):
 
 
     plt.figure()
-    plt.plot(n[j+1, 0], '-b', label='spruce')
-    plt.plot(n[j+1, 1], '-r', label='aspen')
+    plt.plot(sw.x, n[j+1, 0], '-b', label='spruce')
+    plt.plot(aw.x, n[j+1, 1], '-r', label='aspen')
     plt.xlabel('dbh (mm)')
     plt.ylabel('stems per hectare')
     plt.title('year ' + str(j+1))

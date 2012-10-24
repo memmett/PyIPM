@@ -9,7 +9,11 @@ Note that throughout these kernels the units are:
   * aw_pba:      m^2 / ha
   * net_pba:     m^2 / ha
   * di:          cm / y
-  *
+
+If you change the initial conditions (in abb/sw.csv and abb/aw.csv)
+then you should also update the plot sizes.
+
+The plot size is assumed to be in units of m^2.
 
 """
 
@@ -95,7 +99,7 @@ class ABB(Kernel):
 
         r = [ d for d in self.sw0 if d > x ]
 
-        return float(len(r)) / 1e3          # convert # / ha to # / 10 m^2
+        return float(len(r)) / (self.plot_size / 10.0)  # convert # / plot_size to # / 10 m^2
 
 
     def sw_psd_from_meas(self, x):
@@ -103,7 +107,7 @@ class ABB(Kernel):
 
         r = [ d for d in self.sw0 if d > x ]
 
-        return float(sum(r)) / 1e3          # convert mm / ha to m / ha
+        return float(sum(r)) / (self.plot_size / 10.0)  # convert mm / plot_size to m / ha
 
 
     def aw_pba_from_meas(self, x):
@@ -111,7 +115,7 @@ class ABB(Kernel):
 
         r = [ pi * (d/2.0)**2 for d in self.aw0 if d > x ]
 
-        return sum(r) / 1e6          # convert mm^2 / ha to m^2 / ha
+        return sum(r) / (self.plot_size * 10.0**2)      # convert mm^2 / plot_size to m^2 / ha
 
 
     def net_pba_from_meas(self, x):
@@ -120,7 +124,7 @@ class ABB(Kernel):
         r = [ pi * (d/2.0)**2 for d in self.sw0 if d > x ]
         r.extend([ pi * (d/2.0)**2 for d in self.aw0 if d > x ])
 
-        return sum(r) / 1e6          # convert mm^2 / ha to m^2 / ha
+        return sum(r) / (self.plot_size * 10.0**2)      # convert mm^2 / ha to m^2 / ha
 
 
 
@@ -139,7 +143,8 @@ class ABBSW(ABB):
         self.sd = sqrt(3.687244)
 
         measurements = read_csv('kernels/abb/sw.csv', header=['dbh'])
-        self.n0 = np.asarray([ x.dbh for x in measurements ], dtype=np.float64)
+        self.plot_size = 1000.0
+        self.n0        = np.asarray([ x.dbh for x in measurements ], dtype=np.float64)
 
 
     def kernel(self, x, y, t, ix=None, **kwargs):
@@ -184,8 +189,9 @@ class ABBAW(ABB):
 
         self.sd = sqrt(3.687244)
 
-        measurements = read_csv('kernels/abb/aw.csv', header=['dbh'])
-        self.n0 = np.asarray([ x.dbh for x in measurements ], dtype=np.float64)
+        measurements   = read_csv('kernels/abb/aw.csv', header=['dbh'])
+        self.n0        = np.asarray([ x.dbh for x in measurements ], dtype=np.float64)
+        self.plot_size = 1000.0
 
 
     def kernel(self, x, y, t, ix=None, **kwargs):
