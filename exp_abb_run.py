@@ -7,7 +7,7 @@ import time
 import numpy as np
 
 from methods import MidPoint
-from kernels.abb import ABBSW, ABBAW
+from kernels.abb import ABBSW, ABBAW, first_year, last_year, measurements
 
 import matplotlib.pylab as plt
 
@@ -19,7 +19,7 @@ N = 400
 L = 10.0
 U = 500.0
 
-T = range(0, 10)
+T = range(first_year, last_year+10)
 
 ###############################################################################
 # init
@@ -69,7 +69,7 @@ n = np.zeros((len(T), 2, len(sw.x)))
 
 for j, t in enumerate(T[1:]):
 
-    logging.info('step: %d (%s)', t, time.asctime())
+    logging.info('year: %d (%s)', t, time.asctime())
 
     # project
     if j == 0:
@@ -97,17 +97,25 @@ for j, t in enumerate(T[1:]):
     plt.plot(aw.x, n[j+1, 1], '-r', label='aspen')
     plt.xlabel('dbh (mm)')
     plt.ylabel('stems per hectare')
-    plt.title('year ' + str(j+1))
+    plt.title('year ' + str(t+1))
     plt.savefig('plots/projection_%02d.pdf' % (j+1))
-
 
 
 psw = [ sw.population(n[j, 0]) for j in range(len(T)) ]
 paw = [ aw.population(n[j, 1]) for j in range(len(T)) ]
 
+psw[0] = sum(n[0, 0])
+paw[0] = sum(n[0, 1])
+
+Tmeas   = [ t for t in measurements['SW'] ]
+pswmeas = np.asarray([ len(measurements['SW'][t]) for t in Tmeas ]) / sw.plot_size * 1e4
+pawmeas = np.asarray([ len(measurements['AW'][t]) for t in Tmeas ]) / aw.plot_size * 1e4
+
 plt.figure()
 plt.plot(T, psw, '-ob', label='spruce')
 plt.plot(T, paw, '-or', label='aspen')
+plt.plot(Tmeas, pswmeas, 'sc', label='spruce (meas)')
+plt.plot(Tmeas, pawmeas, 'sm', label='aspen (meas)')
 plt.legend(loc='best')
 plt.xlabel('year')
 plt.ylabel('population')

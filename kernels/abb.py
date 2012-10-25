@@ -20,11 +20,27 @@ The plot size is assumed to be in units of m^2.
 import logging
 import numpy as np
 
+from collections import defaultdict
 from numpy import pi, exp, sqrt
 from utils.stats import dnorm
 from utils.io import read_csv
 
 from base import Kernel
+
+
+raw_meas  = read_csv('kernels/abb/abb.csv')
+plot_size = 1000.0
+
+measurements = {
+    'SW': defaultdict(list),
+    'AW': defaultdict(list),
+}
+
+for r in raw_meas:
+    measurements[r.species][int(r.year)].append(float(r.dbh))
+
+first_year = min([ int(x.year) for x in raw_meas ])
+last_year  = max([ int(x.year) for x in raw_meas ])
 
 
 class ABB(Kernel):
@@ -92,8 +108,6 @@ class ABB(Kernel):
         return r / 1e6          # convert mm^2 / ha to m^2 / ha
 
 
-    # XXX: units for all of the below?
-
     def sw_pct_from_meas(self, x):
         """Return number of Spruce with dbh greater than *x*."""
 
@@ -142,9 +156,8 @@ class ABBSW(ABB):
 
         self.sd = sqrt(3.687244)
 
-        measurements = read_csv('kernels/abb/sw.csv', header=['dbh'])
-        self.plot_size = 1000.0
-        self.n0        = np.asarray([ x.dbh for x in measurements ], dtype=np.float64)
+        self.plot_size = plot_size
+        self.n0        = np.asarray(measurements['SW'][first_year])
 
 
     def kernel(self, x, y, t, ix=None, **kwargs):
@@ -189,9 +202,8 @@ class ABBAW(ABB):
 
         self.sd = sqrt(3.687244)
 
-        measurements   = read_csv('kernels/abb/aw.csv', header=['dbh'])
-        self.n0        = np.asarray([ x.dbh for x in measurements ], dtype=np.float64)
-        self.plot_size = 1000.0
+        self.plot_size = plot_size
+        self.n0        = np.asarray(measurements['AW'][first_year])
 
 
     def kernel(self, x, y, t, ix=None, **kwargs):
