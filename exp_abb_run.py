@@ -1,15 +1,13 @@
 """Alberta boreal SW and AW competition experiment."""
 
-
 import logging
 import time
 
 import numpy as np
 
 from methods import MidPoint
-from kernels.abb import ABBSW, ABBAW, first_year, last_year, measurements
-
-import matplotlib.pylab as plt
+from kernels.abb import ABBSW, ABBAW
+from kernels.abb import first_year, last_year, measurements
 
 
 ###############################################################################
@@ -29,18 +27,16 @@ method = MidPoint()
 sw = ABBSW()
 aw = ABBAW()
 
-# setup kernels and connect them to each other
+# setup kernels
 for k in [ sw, aw ]:
     k.L, k.U = L, U
     k.setup(method, N)
 
-    k.kernel_sw = sw
-    k.kernel_aw = aw
-
-# create root logger (debug messages to project.log)
+# create root logger (debug messages to abb.log)
 logging.basicConfig(filename='abb.log',
                     format='%(levelname)s: %(message)s',
                     level=logging.DEBUG)
+
 
 # add stderr info logger
 logger = logging.getLogger()
@@ -57,19 +53,9 @@ logging.info("method: %s", method.name)
 
 n = np.zeros((len(T), 2, len(sw.x)))
 
-# # XXX: initial condition
-# M = 0.5 * (L + U)
-# n[0, 0] = 5 * np.exp(-(sw.x - M)**2/(M/4)**2)
-# n[0, 1] = 10 * np.exp(-(sw.x - M)**2/(M/4)**2)
-
-# plt.figure()
-# plt.plot(n[0, 0], '-b')
-# plt.plot(n[0, 1], '-r')
-# plt.title(str(0))
-
 for j, t in enumerate(T[1:]):
 
-    logging.info('year: %d (%s)', t, time.asctime())
+    logging.info('year: %d', t)
 
     # project
     if j == 0:
@@ -80,8 +66,8 @@ for j, t in enumerate(T[1:]):
         n[j, 0] = sw.method.histogram(sw.n0) / sw.plot_size * 1e4 # convert spp to sph
         n[j, 1] = aw.method.histogram(aw.n0) / aw.plot_size * 1e4 # convert spp to sph
 
-        n[j+1, 0] = sw.first_projection() / sw.plot_size * 1e4 # convert spp to sph
-        n[j+1, 1] = aw.first_projection() / aw.plot_size * 1e4 # convert spp to sph
+        n[j+1, 0] = sw.first_projection() / sw.plot_size * 1e4    # convert spp to sph
+        n[j+1, 1] = aw.first_projection() / aw.plot_size * 1e4    # convert spp to sph
 
     else:
         # set current populations and resample
@@ -92,34 +78,4 @@ for j, t in enumerate(T[1:]):
         n[j+1, 1] = aw.project(n[j, 1])
 
 
-    plt.figure()
-    plt.plot(sw.x, n[j+1, 0], '-b', label='spruce')
-    plt.plot(aw.x, n[j+1, 1], '-r', label='aspen')
-    plt.xlabel('dbh (mm)')
-    plt.ylabel('stems per hectare')
-    plt.title('year ' + str(t+1))
-    plt.savefig('plots/projection_%02d.pdf' % (j+1))
-
-
-psw = [ sw.population(n[j, 0]) for j in range(len(T)) ]
-paw = [ aw.population(n[j, 1]) for j in range(len(T)) ]
-
-psw[0] = sum(n[0, 0])
-paw[0] = sum(n[0, 1])
-
-Tmeas   = [ t for t in measurements['SW'] ]
-pswmeas = np.asarray([ len(measurements['SW'][t]) for t in Tmeas ]) / sw.plot_size * 1e4
-pawmeas = np.asarray([ len(measurements['AW'][t]) for t in Tmeas ]) / aw.plot_size * 1e4
-
-plt.figure()
-plt.plot(T, psw, '-ob', label='spruce')
-plt.plot(T, paw, '-or', label='aspen')
-plt.plot(Tmeas, pswmeas, 'sc', label='spruce (meas)')
-plt.plot(Tmeas, pawmeas, 'sm', label='aspen (meas)')
-plt.legend(loc='best')
-plt.xlabel('year')
-plt.ylabel('population')
-plt.title('population vs time')
-plt.savefig('plots/population.pdf')
-
-plt.show()
+np.savez('abb.npz', x=sw.x, nsw=n[:, 0], naw=n[:, 1], L=L, U=U, N=N, T=T)
