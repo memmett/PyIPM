@@ -4,10 +4,12 @@ import logging
 import time
 
 import numpy as np
+import cPickle as pickle
 
 from methods import MidPoint
 from kernels.abb import ABBSW, ABBAW
-from kernels.abb import first_year, last_year, measurements
+
+from glob import glob
 
 
 ###############################################################################
@@ -17,7 +19,6 @@ N = 400
 L = 10.0
 U = 500.0
 
-T = range(first_year, last_year+10)
 
 ###############################################################################
 # init
@@ -51,31 +52,59 @@ logger.addHandler(info)
 logging.info("start:  %s", time.asctime())
 logging.info("method: %s", method.name)
 
-n = np.zeros((len(T), 2, len(sw.x)))
+plots = {}
 
-for j, t in enumerate(T[1:]):
+for plotfile in glob('kernels/abb/*.csv')[:2]:
+    if plotfile == 'kernels/abb/plotsizes.csv':
+        continue
 
-    logging.info('year: %d', t)
+    plotname = plotfile.split('/')[-1].split('.')[0]
+    logging.info('plot: %s', plotname)
 
-    # project
-    if j == 0:
-        for k in [ sw, aw ]:
-            k.sw0 = sw.n0
-            k.aw0 = aw.n0
+    for k in [ sw, aw ]:
+      k.measurements(plotfile, plotname)
 
-        n[j, 0] = sw.method.histogram(sw.n0) / sw.plot_size * 1e4 # convert spp to sph
-        n[j, 1] = aw.method.histogram(aw.n0) / aw.plot_size * 1e4 # convert spp to sph
+    logging.info('plot size: %f', sw.plot_size)
 
-        n[j+1, 0] = sw.first_projection() / sw.plot_size * 1e4    # convert spp to sph
-        n[j+1, 1] = aw.first_projection() / aw.plot_size * 1e4    # convert spp to sph
+    T = range(sw.first_year, sw.last_year+10)
+    n = np.zeros((len(T)+1, 2, len(sw.x)))
 
-    else:
-        # set current populations and resample
-        for k in [ sw, aw ]:
-            k.update(n[j, 0], n[j, 1], t)
+    for j, t in enumerate(T):
 
-        n[j+1, 0] = sw.project(n[j, 0])
-        n[j+1, 1] = aw.project(n[j, 1])
+        logging.info('year: %d', t)
+
+        if t in sw.years:
+            from_data = True
+            for k in [ sw, aw ]:
+                k.set_n0(t)
+        else:
+            from_data = False
 
 
-np.savez('abb.npz', x=sw.x, nsw=n[:, 0], naw=n[:, 1], L=L, U=U, N=N, T=T)
+        # project
+        if from_data:
+            for k in [ sw, aw ]:
+                k.sw0 = sw.n0
+                k.aw0 = aw.n0
+
+            n[j+1, 0] = sw.first_projection() / sw.plot_size * 1e4
+            n[j+1, 1] = aw.first_projection() / aw.plot_size * 1e4
+
+        else:
+            # set current populations and resample
+            for k in [ sw, aw ]:
+                k.update(n[j, 0], n[j, 1], t)
+
+            n[j+1, 0] = sw.project(n[j, 0])
+            n[j+1, 1] = aw.project(n[j, 1])
+
+
+    plots[plotname] = {}
+    plots[plotname]['nsw'] = np.asarray(n[:, 0])
+    plots[plotname]['naw'] = np.asarray(n[:, 1])
+    plots[plotname]['attrs'] = (L, U, N, T, sw.x, plotfile)
+
+
+
+with open('abb.pkl', 'w') as f:
+  pickle.dump(plots, f)

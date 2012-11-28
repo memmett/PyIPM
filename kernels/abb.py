@@ -28,22 +28,33 @@ from utils.io import read_csv
 from base import Kernel
 
 
-raw_meas  = read_csv('kernels/abb/abb.csv')
-plot_size = 1000.0
-
-measurements = {
-    'SW': defaultdict(list),
-    'AW': defaultdict(list),
-}
-
-for r in raw_meas:
-    measurements[r.species][int(r.year)].append(float(r.dbh))
-
-first_year = min([ int(x.year) for x in raw_meas ])
-last_year  = max([ int(x.year) for x in raw_meas ])
+plotsizes = read_csv('kernels/abb/plotsizes.csv', header=['plot', 'plotsize'])
 
 
 class ABB(Kernel):
+
+
+    def measurements(self, raw_meas, plotname):
+
+        raw_meas = read_csv(raw_meas)
+        plotsize = [ x.plotsize for x in plotsizes if x.plot == plotname ]
+        if len(plotsize) == 1:
+            self.plot_size = float(plotsize[0])
+        else:
+            raise ValueError('something funny with the plotsize')
+
+        self.meas = {
+            'SW': defaultdict(list),
+            'AW': defaultdict(list),
+        }
+
+        for r in raw_meas:
+            if r.species in [ 'SW', 'AW' ]:
+                self.meas[r.species][int(r.year)].append(float(r.dbh))
+
+        self.years      = sorted(list(set([ int(x.year) for x in raw_meas ])))
+        self.first_year = self.years[0]
+        self.last_year  = self.years[-1]
 
 
     def update(self, nsw, naw, t, **kwargs):
@@ -129,7 +140,7 @@ class ABB(Kernel):
 
         r = [ pi * (d/2.0)**2 for d in self.aw0 if d > x ]
 
-        return sum(r) / (self.plot_size * 10.0**2)      # convert mm^2 / plot_size to m^2 / ha
+        return sum(r) / (self.plot_size * 100.0)      # convert mm^2 / plot_size to m^2 / ha
 
 
     def net_pba_from_meas(self, x):
@@ -138,7 +149,7 @@ class ABB(Kernel):
         r = [ pi * (d/2.0)**2 for d in self.sw0 if d > x ]
         r.extend([ pi * (d/2.0)**2 for d in self.aw0 if d > x ])
 
-        return sum(r) / (self.plot_size * 10.0**2)      # convert mm^2 / ha to m^2 / ha
+        return sum(r) / (self.plot_size * 100.0)      # convert mm^2 / plot_size to m^2 / ha
 
 
 
@@ -156,8 +167,10 @@ class ABBSW(ABB):
 
         self.sd = sqrt(3.687244)
 
-        self.plot_size = plot_size
-        self.n0        = np.asarray(measurements['SW'][first_year])
+
+    def set_n0(self, year):
+
+        self.n0 = np.asarray(self.meas['SW'][year])
 
 
     def kernel(self, x, y, t, ix=None, **kwargs):
@@ -202,8 +215,10 @@ class ABBAW(ABB):
 
         self.sd = sqrt(3.687244)
 
-        self.plot_size = plot_size
-        self.n0        = np.asarray(measurements['AW'][first_year])
+
+    def set_n0(self, year):
+
+        self.n0 = np.asarray(self.meas['AW'][year])
 
 
     def kernel(self, x, y, t, ix=None, **kwargs):
@@ -219,9 +234,9 @@ class ABBAW(ABB):
             one     = np.ones(len(y))
             dbh     = np.array(len(y) * [x])
             di      = y - x
-            sw_psd  = np.array(len(y) * [self.sw_psd_from_meas(x)])
-            aw_pba  = np.array(len(y) * [self.aw_pba_from_meas(x)])
-            net_pba = np.array(len(y) * [self.net_pba_from_meas(x)])
+            sw_psd  = np.array(len(y) * [ self.sw_psd_from_meas(x)  ])
+            aw_pba  = np.array(len(y) * [ self.aw_pba_from_meas(x)  ])
+            net_pba = np.array(len(y) * [ self.net_pba_from_meas(x) ])
 
 
         # growth
