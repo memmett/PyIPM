@@ -6,11 +6,8 @@ import time
 import numpy as np
 import cPickle as pickle
 
-from methods import MidPoint
-from kernels.abb import ABBSW, ABBAW
-
 from glob import glob
-
+from exp_abb_kernels import flavours, abb_init_kernels
 
 np.set_printoptions(linewidth=200)
 
@@ -25,17 +22,6 @@ U = 800.0
 
 ###############################################################################
 # init
-
-sw = ABBSW()
-aw = ABBAW()
-
-# setup kernels
-sw.L, sw.U = L, U
-sw.setup(MidPoint(), N)
-
-aw.L, aw.U = L, U
-aw.setup(MidPoint(), N)
-
 
 # create root logger (debug messages to abb.log)
 logging.basicConfig(filename='abb.log',
@@ -53,74 +39,76 @@ logger.addHandler(info)
 ###############################################################################
 # main
 
-logging.info("start:  %s", time.asctime())
-logging.info("method: %s", sw.method.name)
+logging.info("START: %s", time.asctime())
 
-plots = {}
+for flavour in flavours:
 
-for plotfile in glob('kernels/abb/*.csv'):
-    if plotfile == 'kernels/abb/plotsizes.csv':
-        continue
+    logging.info("FLAVOUR: %s", flavour)
 
-    plotname = plotfile.split('/')[-1].split('.')[0]
-    logging.info('plot: %s', plotname)
+    sw, aw = abb_init_kernels(L, U, N, flavour)
 
-    for k in [ sw, aw ]:
-      k.measurements(plotfile, plotname)
+    plots = {}
+    for plotfile in glob('kernels/abb/*.csv'):
+        if plotfile == 'kernels/abb/plotsizes.csv':
+            continue
 
-    logging.info('plot size: %f', sw.plot_size)
+        plotname = plotfile.split('/')[-1].split('.')[0]
+        for k in [ sw, aw ]:
+          k.measurements(plotfile, plotname)
 
-    T = range(sw.first_year, sw.last_year+10)
-    n = np.zeros((len(T)+1, 2, len(sw.x)))
+        logging.info('PLOT: %s %f', plotname, sw.plot_size)
 
-    for j, t in enumerate(T):
+        T = range(sw.first_year, sw.last_year+10)
+        n = np.zeros((len(T)+1, 2, len(sw.x)))
 
-        logging.debug('year: %d', t)
+        for j, t in enumerate(T):
 
-        if t in sw.years:
-            from_data = True
-            for k in [ sw, aw ]:
-                k.set_n0(t)
-        else:
-            from_data = False
+            logging.debug('year: %d', t)
 
-
-        # project
-        if from_data:
-            for k in [ sw, aw ]:
-                k.sw0 = sw.n0
-                k.aw0 = aw.n0
-
-            n[j+1, 0] = sw.first_projection() / sw.plot_size * 1e4
-            n[j+1, 1] = aw.first_projection() / aw.plot_size * 1e4
-
-        else:
-            # set current populations and resample
-            for k in [ sw, aw ]:
-                k.update(n[j, 0], n[j, 1], t)
-
-            n[j+1, 0] = sw.project(n[j, 0])
-            n[j+1, 1] = aw.project(n[j, 1])
-
-            # dx = (U - L) / N
-
-            # print 'A'
-            # print sw.method.A[:8,:8]
-            # # print 'k'
-            # # print sw.kernel(sw.x[:5], sw.x[0], 0.0, ix=np.asarray(range(10))) * dx
-
-            # import pylab as plt
-            # plt.plot(sw.x, n[j, 0], '-b')
-            # plt.plot(sw.x, n[j+1, 0], '-r')
-            # plt.show()
+            if t in sw.years:
+                from_data = True
+                for k in [ sw, aw ]:
+                    k.set_n0(t)
+            else:
+                from_data = False
 
 
-    plots[plotname] = {}
-    plots[plotname]['nsw'] = np.asarray(n[:, 0])
-    plots[plotname]['naw'] = np.asarray(n[:, 1])
-    plots[plotname]['attrs'] = (L, U, N, T, sw.x, plotfile)
+            # project
+            if from_data:
+                for k in [ sw, aw ]:
+                    k.sw0 = sw.n0
+                    k.aw0 = aw.n0
+
+                n[j+1, 0] = sw.first_projection() / sw.plot_size * 1e4
+                n[j+1, 1] = aw.first_projection() / aw.plot_size * 1e4
+
+            else:
+                # set current populations and resample
+                for k in [ sw, aw ]:
+                    k.update(n[j, 0], n[j, 1], t)
+
+                n[j+1, 0] = sw.project(n[j, 0])
+                n[j+1, 1] = aw.project(n[j, 1])
+
+                # dx = (U - L) / N
+
+                # print 'A'
+                # print sw.method.A[:8,:8]
+                # # print 'k'
+                # # print sw.kernel(sw.x[:5], sw.x[0], 0.0, ix=np.asarray(range(10))) * dx
+
+                # import pylab as plt
+                # plt.plot(sw.x, n[j, 0], '-b')
+                # plt.plot(sw.x, n[j+1, 0], '-r')
+                # plt.show()
+
+
+        plots[plotname] = {}
+        plots[plotname]['nsw'] = np.asarray(n[:, 0])
+        plots[plotname]['naw'] = np.asarray(n[:, 1])
+        plots[plotname]['attrs'] = (L, U, N, T, sw.x, plotfile)
 
 
 
-with open('abb.pkl', 'w') as f:
-  pickle.dump(plots, f)
+    with open('abb_%s.pkl' % flavour, 'w') as f:
+      pickle.dump(plots, f)

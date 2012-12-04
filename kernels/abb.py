@@ -167,6 +167,8 @@ class ABBSW(ABB):
 
         self.sd = sqrt(3.687244)
 
+        self.const_mort = 0.99
+
 
     def set_n0(self, year):
 
@@ -195,10 +197,14 @@ class ABBSW(ABB):
         # g = dtnorm(y, mu=mu, a0=dbh, sd=self.sd)
 
         # survival
-        xi = np.vstack([ one, dbh, sw_psd, aw_pba ])
-        mu = np.dot(self.survival_params, xi)
-
-        s = exp(mu) / (1.0 + exp(mu))
+        if self.sw_mort == 'model':
+            xi = np.vstack([ one, dbh, sw_psd, aw_pba ])
+            mu = np.dot(self.survival_params, xi)
+            s  = exp(mu) / (1.0 + exp(mu))
+        elif self.sw_mort == 'const':
+            s = self.const_mort
+        else:
+            raise ValueError()
 
         return g * s
 
