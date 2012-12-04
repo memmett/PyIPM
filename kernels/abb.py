@@ -22,7 +22,7 @@ import numpy as np
 
 from collections import defaultdict
 from numpy import pi, exp, sqrt
-from utils.stats import dnorm
+from utils.stats import dnorm, dtnorm
 from utils.io import read_csv
 
 from base import Kernel
@@ -63,7 +63,7 @@ class ABB(Kernel):
 
         # cache sw_pct, sw_psd, aw_pba etc...
         ix = np.array(range(len(self.x)))
-        self._sw_pct  = self.sw_pct(self.x, ix)
+        # self._sw_pct  = self.sw_pct(self.x, ix)
         self._sw_psd  = self.sw_psd(self.x, ix)
         self._aw_pba  = self.aw_pba(self.x, ix)
         self._net_pba = self.net_pba(self.x, ix)
@@ -160,10 +160,10 @@ class ABBSW(ABB):
         ABB.__init__(self)
 
         self.growth_params = np.array(
-            [ 1.358768, 1.025693, -5.700839e-5, -2.256733e-1, -1.882815e-2 ])
+            [ 1.334, 1.028, -0.004703, -0.01655, -0.00006938 ])
 
         self.survival_params = np.array(
-            [ 3.3668568, 0.023043, -0.183418, -0.041333 ])
+            [ 4.780, 0.0342, -0.00738, -0.0299 ])
 
         self.sd = sqrt(3.687244)
 
@@ -178,22 +178,24 @@ class ABBSW(ABB):
         if ix is not None:
             one    = np.ones(len(x))
             dbh    = x
-            sw_pct = self._sw_pct[ix]
+            sw_psd = self._sw_psd[ix]
             aw_pba = self._aw_pba[ix]
         else:
             one    = np.ones(len(y))
             dbh    = np.array(len(y) * [x])
-            sw_pct = np.array(len(y) * [self.sw_pct_from_meas(x)])
+            sw_psd = np.array(len(y) * [self.sw_psd_from_meas(x)])
             aw_pba = np.array(len(y) * [self.aw_pba_from_meas(x)])
 
         # growth
-        xi = np.vstack([ one, dbh, dbh**2, sw_pct, aw_pba ])
+        xi = np.vstack([ one, dbh, sw_psd, aw_pba, dbh**2 ])
         mu = np.dot(self.growth_params, xi)
+        mu = np.where(mu > dbh, mu, dbh)
 
         g = dnorm(y, mu, sd=self.sd)
+        # g = dtnorm(y, mu=mu, a0=dbh, sd=self.sd)
 
         # survival
-        xi = np.vstack([ one, dbh, sw_pct, aw_pba ])
+        xi = np.vstack([ one, dbh, sw_psd, aw_pba ])
         mu = np.dot(self.survival_params, xi)
 
         s = exp(mu) / (1.0 + exp(mu))
@@ -208,7 +210,7 @@ class ABBAW(ABB):
         ABB.__init__(self)
 
         self.growth_params = np.array(
-            [ 3.6741201, 0.9954211, -0.0075639, -0.0139588 ])
+            [ 3.722, 0.995, -0.00778, -0.0142 ])
 
         self.survival_params = np.array(
             [ 2.20, 0.0207, -0.0000286, -0.0659, -0.000000778 ])
@@ -226,7 +228,7 @@ class ABBAW(ABB):
         if ix is not None:
             one     = np.ones(len(x))
             dbh     = x
-            di      = y - x
+            di      = (y - x) / 10.0
             sw_psd  = self._sw_psd[ix]
             aw_pba  = self._aw_pba[ix]
             net_pba = self._net_pba[ix]
@@ -242,16 +244,18 @@ class ABBAW(ABB):
         # growth
         xi = np.vstack([ one, dbh, aw_pba, sw_psd ])
         mu = np.dot(self.growth_params, xi)
+        mu = np.where(mu > dbh, mu, dbh)
 
         g = dnorm(y, mu, sd=self.sd)
+        # g = dtnorm(y, mu=mu, a0=dbh, sd=self.sd)
 
-        # survival
-        xi = np.vstack([ one, dbh, dbh**2, di, dbh**2 * net_pba ])
-        mu = np.dot(self.survival_params, xi)
+        # # survival
+        # xi = np.vstack([ one, dbh, dbh**2, di, dbh**2 * net_pba ])
+        # mu = np.dot(self.survival_params, xi)
 
-        s  = exp(mu) / (1.0 + exp(mu))
+        # s  = exp(mu) / (1.0 + exp(mu))
 
-        return g * s
+        return 0.99 * g
 
 
 
