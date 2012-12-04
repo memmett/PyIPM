@@ -1,4 +1,10 @@
 *~
 *.py[co]
 *.pdf
-*.log 
+*.log
+
+*.pkl
+
+plots/
+kernels/abb/*.csv
+

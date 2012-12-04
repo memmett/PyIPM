@@ -12,26 +12,30 @@ from kernels.abb import ABBSW, ABBAW
 from glob import glob
 
 
+np.set_printoptions(linewidth=200)
+
+
 ###############################################################################
 # config
 
-N = 400
-L = 10.0
-U = 500.0
+N = 801
+L = 0.0
+U = 800.0
 
 
 ###############################################################################
 # init
 
-method = MidPoint()
-
 sw = ABBSW()
 aw = ABBAW()
 
 # setup kernels
-for k in [ sw, aw ]:
-    k.L, k.U = L, U
-    k.setup(method, N)
+sw.L, sw.U = L, U
+sw.setup(MidPoint(), N)
+
+aw.L, aw.U = L, U
+aw.setup(MidPoint(), N)
+
 
 # create root logger (debug messages to abb.log)
 logging.basicConfig(filename='abb.log',
@@ -50,11 +54,11 @@ logger.addHandler(info)
 # main
 
 logging.info("start:  %s", time.asctime())
-logging.info("method: %s", method.name)
+logging.info("method: %s", sw.method.name)
 
 plots = {}
 
-for plotfile in glob('kernels/abb/*.csv')[:2]:
+for plotfile in glob('kernels/abb/*.csv'):
     if plotfile == 'kernels/abb/plotsizes.csv':
         continue
 
@@ -71,7 +75,7 @@ for plotfile in glob('kernels/abb/*.csv')[:2]:
 
     for j, t in enumerate(T):
 
-        logging.info('year: %d', t)
+        logging.debug('year: %d', t)
 
         if t in sw.years:
             from_data = True
@@ -97,6 +101,18 @@ for plotfile in glob('kernels/abb/*.csv')[:2]:
 
             n[j+1, 0] = sw.project(n[j, 0])
             n[j+1, 1] = aw.project(n[j, 1])
+
+            # dx = (U - L) / N
+
+            # print 'A'
+            # print sw.method.A[:8,:8]
+            # # print 'k'
+            # # print sw.kernel(sw.x[:5], sw.x[0], 0.0, ix=np.asarray(range(10))) * dx
+
+            # import pylab as plt
+            # plt.plot(sw.x, n[j, 0], '-b')
+            # plt.plot(sw.x, n[j+1, 0], '-r')
+            # plt.show()
 
 
     plots[plotname] = {}
