@@ -1,4 +1,9 @@
-"""Alberta boreal SW and AW competition experiment."""
+"""Alberta boreal SW and AW competition experiment.
+
+Generate plots to compare with/with out competition in the mortality
+model.
+
+"""
 
 
 import numpy as np
@@ -11,7 +16,7 @@ from exp_abb_kernels import abb_init_kernels
 ###############################################################################
 # load results
 
-dsets = [ 'abb_with_nocomp.pkl', 'abb_with_comp.pkl' ]
+dsets = [ 'out/abb_with_comp.pkl', 'out/abb_with_nocomp.pkl' ]
 
 with open(dsets[0], 'r') as f:
     plots1 = pickle.load(f)
@@ -23,7 +28,7 @@ with open(dsets[1], 'r') as f:
 ###############################################################################
 # main
 
-for plotname in plots_comp:
+for plotname in plots1:
 
     plot1 = plots1[plotname]
     plot2 = plots2[plotname]
@@ -46,29 +51,29 @@ for plotname in plots_comp:
             meas    = np.asarray(sw1.meas['SW'][t])
             weights = 1e4 / sw1.plot_size * (dx/4) * np.ones(meas.shape)
             plt.hist(meas, bins=N/4, weights=weights,
-                     histtype='stepfilled', color='blue', alpha=0.6, label='spruce meas')
+                     histtype='stepfilled', color='0.5', edgecolor='0.5', label='spruce meas')
 
-            plt.plot(sw1.x, nsw1[j], '-b', label='spruce (comp)',    linewidth=2)
-            plt.plot(sw2.x, nsw2[j], '-c', label='spruce (no comp)', linewidth=2)
+            plt.plot(sw1.x, nsw1[j], color='k', linestyle='-', linewidth=2, label='spruce (comp)')
+            plt.plot(sw2.x, nsw2[j], color='r', linestyle='-', linewidth=2, label='spruce (no comp)')
 
             plt.legend(loc='best')
             plt.ylabel('stems per hectare')
             plt.title(plotname + ' year ' + str(t))
 
+            # aspen
             plt.subplot(212)
-
             meas    = np.asarray(aw1.meas['AW'][t])
             weights = 1e4 / aw1.plot_size * (dx/4) * np.ones(meas.shape)
             plt.hist(meas, bins=N/4, weights=weights,
-                     histtype='stepfilled', color='red', alpha=0.6, label='aspen meas')
+                     histtype='stepfilled', color='0.5', edgecolor='0.5', label='aspen meas')
 
-            plt.plot(aw1.x, naw1[j], '-r', label='aspen (comp)',    linewidth=2)
-            plt.plot(aw2.x, naw2[j], '-m', label='aspen (no comp)', linewidth=2)
+            plt.plot(aw1.x, naw1[j], color='k', linestyle='-', linewidth=2, label='aspen (comp)')
+            plt.plot(aw2.x, naw2[j], color='r', linestyle='-', linewidth=2, label='aspen (no comp)')
 
             plt.legend(loc='best')
             plt.xlabel('dbh (mm)')
             plt.ylabel('stems per hectare')
-            plt.savefig('plots/%s_projection_comp_%d.png' % (plotname, t))
+            plt.savefig('plots/projcomp_%s_%d.png' % (plotname, t))
 
             plt.close()
 
@@ -94,5 +99,5 @@ for plotname in plots_comp:
     plt.xlabel('year')
     plt.ylabel('population')
     plt.title('population vs time ' + plotname)
-    plt.savefig('plots/%s_population_comp.png' % plotname)
+    plt.savefig('plots/popcomp_%s.png' % plotname)
     plt.close()

@@ -54,7 +54,7 @@ plt.hist(mrates, bins=501)
 plt.xlim([0.9, 1.0])
 plt.xlabel('mortality rate')
 plt.ylabel('frequency')
-plt.savefig('plots/sw_mort_model_mort_hist.pdf')
+plt.savefig('plots/morthist_sw_mort_model.pdf')
 
 
 ###############################################################################
@@ -110,7 +110,7 @@ for flavour in prd:
     plt.ylabel('observed')
     plt.xlabel('predicted')
     plt.legend(loc='best')
-    plt.savefig('plots/%s_mort_obsprd.pdf' % flavour)
+    plt.savefig('plots/mortobsprd_sw_mort_%s.pdf' % flavour)
 
 
 print "mortality stats:"
