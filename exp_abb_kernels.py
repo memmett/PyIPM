@@ -3,17 +3,21 @@
 from methods import MidPoint
 from kernels.abb import ABBSW, ABBAW
 
+# dictionary of flavor: kernel flags
 flavours = {
-    # 'sw_mort_model': { 'sw_mort': 'model' },
-    # 'sw_mort_const': { 'sw_mort': 'const' },
-    # 'with_comp': { 'competition': True },
-    # 'with_nocomp': { 'competition': False },
-    'eviction': { 'no_mort': True },
+    'sw_mort_model': { 'sw_mort': 'model' },
+    'sw_mort_const': { 'sw_mort': 'const' },
+    'with_comp':     { 'competition': True },
+    'with_nocomp':   { 'competition': False },
+    'eviction':      { 'no_mort': True },
 }
 
 
 def abb_init_kernels(L, U, N, flavour, plotname):
-    """Return SW and AW kernels according to parameters and flavour."""
+    """Instantiate SW and AW kernels according to parameters and flavour.
+
+    Kernel flags are set based on the flavour.
+    """
 
     sw = ABBSW()
     aw = ABBAW()

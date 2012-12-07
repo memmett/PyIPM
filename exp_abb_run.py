@@ -1,4 +1,7 @@
-"""Alberta boreal SW and AW competition experiment."""
+"""Alberta boreal SW and AW competition experiment.
+
+This runs all flavours of kernels as defined in exp_abb_kernels.py.
+"""
 
 import logging
 import time
@@ -8,8 +11,6 @@ import cPickle as pickle
 
 from glob import glob
 from exp_abb_kernels import flavours, abb_init_kernels
-
-np.set_printoptions(linewidth=200)
 
 
 ###############################################################################
@@ -69,8 +70,6 @@ for flavour in flavours:
             else:
                 from_data = False
 
-
-            # project
             if from_data:
                 for k in [ sw, aw ]:
                     k.sw0 = sw.n0
@@ -87,18 +86,6 @@ for flavour in flavours:
                 n[j+1, 0] = sw.project(n[j, 0])
                 n[j+1, 1] = aw.project(n[j, 1])
 
-                # dx = (U - L) / N
-
-                # print 'A'
-                # print sw.method.A[:8,:8]
-                # # print 'k'
-                # # print sw.kernel(sw.x[:5], sw.x[0], 0.0, ix=np.asarray(range(10))) * dx
-
-                # import pylab as plt
-                # plt.plot(sw.x, n[j, 0], '-b')
-                # plt.plot(sw.x, n[j+1, 0], '-r')
-                # plt.show()
-
 
         plots[plotname] = {}
         plots[plotname]['nsw'] = np.asarray(n[:, 0])
@@ -107,5 +94,5 @@ for flavour in flavours:
 
 
 
-    with open('abb_%s.pkl' % flavour, 'w') as f:
+    with open('out/abb_%s.pkl' % flavour, 'w') as f:
       pickle.dump(plots, f)
