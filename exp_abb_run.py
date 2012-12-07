@@ -45,16 +45,13 @@ for flavour in flavours:
 
     logging.info("FLAVOUR: %s", flavour)
 
-    sw, aw = abb_init_kernels(L, U, N, flavour)
-
     plots = {}
     for plotfile in glob('kernels/abb/*.csv'):
         if plotfile == 'kernels/abb/plotsizes.csv':
             continue
-
         plotname = plotfile.split('/')[-1].split('.')[0]
-        for k in [ sw, aw ]:
-          k.measurements(plotfile, plotname)
+
+        sw, aw = abb_init_kernels(L, U, N, flavour, plotname)
 
         logging.info('PLOT: %s %f', plotname, sw.plot_size)
 

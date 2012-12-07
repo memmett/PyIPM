@@ -14,7 +14,7 @@ import matplotlib.pylab as plt
 ###############################################################################
 # load results
 
-with open('abb.pkl', 'r') as f:
+with open('abb_eviction.pkl', 'r') as f:
     plots = pickle.load(f)
 
 
@@ -84,7 +84,8 @@ for plotname in plots:
     psw[0] = sum(nsw[0])
     paw[0] = sum(naw[0])
 
-    Tmeas   = [ t for t in sw.meas['SW'] ]
+    # Tmeas   = [ t for t in sw.meas['SW'] ]
+    Tmeas   = sw.years
     pswmeas = np.asarray([ len(sw.meas['SW'][t]) for t in Tmeas ]) / sw.plot_size * 1e4
     pawmeas = np.asarray([ len(aw.meas['AW'][t]) for t in Tmeas ]) / aw.plot_size * 1e4
 

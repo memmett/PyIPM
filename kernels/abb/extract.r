@@ -17,7 +17,6 @@ write.table(plotsizes, file='plotsizes.csv', sep=',', row.names=F)
 
 
 for (plot in plots) {
-
     p = psp[which(psp$PLOT == plot),]
 
     p_fy = p[which(p$YEAR == min(p$YEAR)),]

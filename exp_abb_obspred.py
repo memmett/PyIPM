@@ -2,19 +2,16 @@
 
 
 import numpy as np
-
-from methods import MidPoint
-from kernels.abb import ABBSW, ABBAW
-
 import cPickle as pickle
-
 import pylab as plt
+
+from exp_abb_kernels import abb_init_kernels
 
 
 ###############################################################################
 # load results
 
-with open('abb.pkl', 'r') as f:
+with open('abb_with_nocomp.pkl', 'r') as f:
     plots = pickle.load(f)
 
 
@@ -33,14 +30,18 @@ for plotname in plots:
     L, U, N, T, x, plotfile = plot['attrs']
     nsw, naw = plot['nsw'], plot['naw']
 
-    sw = ABBSW()
-    aw = ABBAW()
+    # sw = ABBSW()
+    # aw = ABBAW()
 
-    for k in [ sw, aw ]:
-        k.L, k.U = L, U
-        k.setup(MidPoint(), N)
-        k.measurements(plotfile, plotname)
+    # for k in [ sw, aw ]:
+    #     k.L, k.U = L, U
+    #     k.setup(MidPoint(), N)
+    #     k.measurements(plotfile, plotname)
 
+    # sw, aw = abb_init_kernels(L, U, N, 'sw_mort_model', plotname)
+    sw, aw = abb_init_kernels(L, U, N, 'with_comp', plotname)
+
+    # XXX
     fy = sw.years[0]
     if aw.meas['AW'][fy] > sw.meas['SW'][fy]:
       continue
@@ -59,7 +60,7 @@ for species in [ 'sw', 'aw' ]:
     from utils.stats import dent_blackie, theil, MSEP
     from scipy.stats import ttest_ind, mannwhitneyu, pearsonr
 
-    print species
+    print 'species:', species
 
     obs = pops['obs'][species]
     prd = pops['prd'][species]
@@ -93,7 +94,7 @@ for species in [ 'sw', 'aw' ]:
     yex  = x
 
     plt.figure()
-    plt.plot(prd, obs, 'ok', label='data')
+    plt.plot(prd, obs, 'ok', label='data', alpha=0.5)
     plt.plot(x,   yex, '-r', label='exact')
     plt.plot(x,   yhat, '-b', label='fit')
     plt.ylabel('observed')
