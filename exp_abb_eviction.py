@@ -11,7 +11,7 @@ from exp_abb_kernels import abb_init_kernels
 ###############################################################################
 # load results
 
-with open('abb_eviction.pkl', 'r') as f:
+with open('out/abb_eviction.pkl', 'r') as f:
     plots = pickle.load(f)
 
 
