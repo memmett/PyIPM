@@ -60,10 +60,10 @@ def obsprd_plot(plots, flavour):
         stats[species]['pearsonr'] = pearsonr(prd, obs)
 
         mc, sc, rc, msep = MSEP(obs, prd)
-        stats[species]['msep_msep'] = msep
-        stats[species]['msep_mc']   = mc
-        stats[species]['msep_sc']   = sc
-        stats[species]['msep_rc']   = rc
+        stats[species]['msep'] = msep
+        stats[species]['mc']   = mc
+        stats[species]['sc']   = sc
+        stats[species]['rc']   = rc
 
         x    = np.asarray(sorted(prd))
         yhat = a + b*x
@@ -83,20 +83,77 @@ def obsprd_plot(plots, flavour):
     return stats
 
 
+
+
+
+def mktable(stats, label, caption):
+
+    from string import Template
+
+    class LaTexTemplate(Template):
+        delimiter = '@'
+
+    table = LaTexTemplate(r"""
+\begin{table}
+  \begin{center}
+    \begin{tabular}{lrrcrr} \toprule
+                  & \multicolumn{2}{c}{Spruce} & \hspace{2em} & \multicolumn{2}{c}{Aspen} \\
+                  & statistic  & p-value        &              & statistic & p-value       \\ \midrule
+      $F$         & @sw_F     & @sw_F_p         &              & @aw_F     & @aw_F_p       \\
+      $t$         & @sw_t     & @sw_t_p         &              & @aw_t     & @aw_t_p       \\
+      $Theil$     & @sw_theil & @sw_theil_p     &              & @aw_theil & @aw_theil_p   \\
+      $U$         & @sw_mannwhitneyu & @sw_mannwhitneyu_p &  & @aw_mannwhitneyu & @aw_mannwhitneyu_p   \\
+      $Pearson r$ & @sw_pearsonr & @sw_pearsonr_p &            & @aw_pearsonr & @aw_pearsonr_p   \\
+      $MSEP$      & @sw_msep & @sw_msep_p       &              & @aw_msep & @aw_msep_p   \\
+      $MC$      & @sw_mc & @sw_mc_p       &              & @aw_mc & @aw_mc_p   \\
+      $SC$      & @sw_sc & @sw_sc_p       &              & @aw_sc & @aw_sc_p   \\
+      $RC$      & @sw_rc & @sw_rc_p       &              & @aw_rc & @aw_rc_p   \\
+                          \bottomrule
+    \end{tabular}
+  \end{center}
+  \label{@label}
+  \caption{@caption}
+\end{table}
+""")
+
+    statvals = {}
+
+    for species in stats:
+        for stat in stats[species]:
+            if isinstance(stats[species][stat], tuple):
+                val, pval = stats[species][stat]
+                val  = "%.3g" % val
+                pval = "%.3g" % pval
+            else:
+                val  = stats[species][stat]
+                val  = "%.3g" % val
+                pval = '--'
+
+            statvals[species + '_' + stat]        = val
+            statvals[species + '_' + stat + '_p'] = pval
+
+    return table.substitute(label=label, caption=caption, **statvals)
+
 ###############################################################################
 # load results
 
 if __name__ == '__main__':
 
-    with open('out/abb_sw_mort_model.pkl', 'r') as f:
+    with open('out/abb_with_comp.pkl', 'r') as f:
         plots = pickle.load(f)
 
-    stats = obsprd_plot(plots, 'sw_mort_model')
+    stats = obsprd_plot(plots, 'with_comp')
     pprint(stats)
 
-    plt.show()
+    print mktable(stats, 'tab:obsprdstats', 'Observed vs predicted statistics')
 
 
+    with open('out/abb_with_nocomp.pkl', 'r') as f:
+        plots = pickle.load(f)
 
+    stats = obsprd_plot(plots, 'with_nocomp')
+    pprint(stats)
 
+    print mktable(stats, 'tab:obsprdstatsnc', 'Observed vs predicted statistics (no comp)')
 
+    # plt.show()

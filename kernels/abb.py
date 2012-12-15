@@ -71,6 +71,8 @@ class ABB(Kernel):
         # cache sw_psd, aw_pba etc...
         ix = np.array(range(len(self.x)))
         self._sw_psd  = self.sw_psd(self.x, ix)
+        self._sw_pct  = self.sw_pct(self.x, ix)
+        self._aw_pct  = self.aw_pct(self.x, ix)
         self._aw_pba  = self.aw_pba(self.x, ix)
         self._net_pba = self.net_pba(self.x, ix)
 
@@ -88,6 +90,17 @@ class ABB(Kernel):
 
         for i, j in enumerate(ix):
             r[i] = np.dot(self.method.P[j:], self.nsw[j:])
+
+        return r / 1e3          # convert # / ha to # / 10 m^2
+
+
+    def aw_pct(self, x, ix):
+        """Return number of Spruce with dbh greater than *x*."""
+
+        r = np.empty(x.shape)
+
+        for i, j in enumerate(ix):
+            r[i] = np.dot(self.method.P[j:], self.naw[j:])
 
         return r / 1e3          # convert # / ha to # / 10 m^2
 
@@ -133,6 +146,14 @@ class ABB(Kernel):
         return float(len(r)) / (self.plot_size / 10.0)  # convert # / plot_size to # / 10 m^2
 
 
+    def aw_pct_from_meas(self, x):
+        """Return number of aspen with dbh greater than *x*."""
+
+        r = [ d for d in self.aw0 if d > x ]
+
+        return float(len(r)) / (self.plot_size / 10.0)  # convert # / plot_size to # / 10 m^2
+
+
     def sw_psd_from_meas(self, x):
         """Return Spruce sum-of-diameters for Spruce with dbh greater than *x*."""
 
@@ -166,7 +187,7 @@ class ABBSW(ABB):
         ABB.__init__(self)
 
         self.growth_params = np.array(
-            [ 1.334,  1.028, -0.004703, -0.01655, -0.00006938 ])
+            [ 1.430, 1.023, -3.883e-3, -6.659e-2, -5.435e-5 ])
 
         self.growth_params_no_comp = np.array(
             [ 0.5905, 1.029, 0.0, 0.0, -0.00006619 ])
@@ -174,7 +195,8 @@ class ABBSW(ABB):
         self.survival_params = np.array(
             [ 4.780, 0.0342, -0.00738, -0.0299 ])
 
-        self.sd = sqrt(3.687244)
+        self.sd = sqrt(3.550338)
+        self.sd_no_comp = sqrt(1.003784)
 
 
     def set_n0(self, year):
@@ -188,24 +210,30 @@ class ABBSW(ABB):
             one    = np.ones(len(x))
             dbh    = x
             sw_psd = self._sw_psd[ix]
+            sw_pct = self._sw_pct[ix]
+            aw_pct = self._aw_pct[ix]
             aw_pba = self._aw_pba[ix]
         else:
             one    = np.ones(len(y))
             dbh    = np.array(len(y) * [x])
             sw_psd = np.array(len(y) * [self.sw_psd_from_meas(x)])
+            sw_pct = np.array(len(y) * [self.sw_pct_from_meas(x)])
+            aw_pct = np.array(len(y) * [self.aw_pct_from_meas(x)])
             aw_pba = np.array(len(y) * [self.aw_pba_from_meas(x)])
 
         # growth
         if self.competition:
             params = self.growth_params
+            sd = self.sd
         else:
             params = self.growth_params_no_comp
+            sd = self.sd_no_comp
 
-        xi = np.vstack([ one, dbh, sw_psd, aw_pba, dbh**2 ])
+        xi = np.vstack([ one, dbh, sw_psd, aw_pct + sw_pct, dbh**2 ])
         mu = np.dot(params, xi)
         mu = np.where(mu > dbh, mu, dbh)
 
-        g = dnorm(y, mu, sd=self.sd)
+        g = dnorm(y, mu, sd=sd)
         # g = dtnorm(y, mu=mu, a0=dbh, sd=self.sd)
 
         # survival
@@ -230,15 +258,13 @@ class ABBAW(ABB):
         ABB.__init__(self)
 
         self.growth_params = np.array(
-            [ 3.674,   0.995, -0.0077569, -0.0139588 ])
+            [ 3.674, 0.995, -0.0148, 0.0 ])
 
         self.growth_params_no_comp = np.array(
-            [ 2.620, 0.99941, 0.0, 0.0 ])
+            [ 2.351, 1.004, 0.0, -1.336 ])
 
-        self.survival_params = np.array(
-            [ 2.20, 0.0207, -0.0000286, -0.0659, -0.000000778 ])
-
-        self.sd = sqrt(3.687244)
+        self.sd = sqrt(3.551841)
+        self.sd_no_comp = sqrt(1.000585)
 
 
     def set_n0(self, year):
@@ -253,28 +279,30 @@ class ABBAW(ABB):
             dbh     = x
             # di      = (y - x) / 10.0
             sw_psd  = self._sw_psd[ix]
-            aw_pba  = self._aw_pba[ix]
+            # aw_pba  = self._aw_pba[ix]
             # net_pba = self._net_pba[ix]
         else:
             one     = np.ones(len(y))
             dbh     = np.array(len(y) * [x])
             # di      = y - x
             sw_psd  = np.array(len(y) * [ self.sw_psd_from_meas(x)  ])
-            aw_pba  = np.array(len(y) * [ self.aw_pba_from_meas(x)  ])
+            # aw_pba  = np.array(len(y) * [ self.aw_pba_from_meas(x)  ])
             # net_pba = np.array(len(y) * [ self.net_pba_from_meas(x) ])
 
 
         # growth
         if self.competition:
             params = self.growth_params
+            sd     = self.sd
         else:
             params = self.growth_params_no_comp
+            sd     = self.sd_no_comp
 
-        xi = np.vstack([ one, dbh, aw_pba, sw_psd ])
+        xi = np.vstack([ one, dbh, sw_psd, dbh**2 ])
         mu = np.dot(params, xi)
         mu = np.where(mu > dbh, mu, dbh)
 
-        g = dnorm(y, mu, sd=self.sd)
+        g = dnorm(y, mu, sd=sd)
         # g = dtnorm(y, mu=mu, a0=dbh, sd=self.sd)
 
         # # survival

@@ -1,0 +1,3 @@
+#!/bin/sh
+
+rsync -avz plots/ adawson@boreal:Documents/school/work/multiIPM/paper/plots/

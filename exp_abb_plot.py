@@ -14,7 +14,7 @@ import matplotlib.pylab as plt
 ###############################################################################
 # load results
 
-with open('abb_eviction.pkl', 'r') as f:
+with open('out/abb_with_comp.pkl', 'r') as f:
     plots = pickle.load(f)
 
 
@@ -53,7 +53,7 @@ for plotname in plots:
             meas    = np.asarray(sw.meas['SW'][t])
             weights = 1e4 / sw.plot_size * (dx/4) * np.ones(meas.shape)
             plt.hist(meas, bins=N/4, weights=weights,
-                     histtype='stepfilled', color='blue', alpha=0.6, label='spruce meas')
+                     histtype='stepfilled', color='0.5', edgecolor='0.5', label='spruce meas')
 
             plt.plot(sw.x, nsw[j], '-b', label='spruce', linewidth=2)
 
@@ -66,14 +66,14 @@ for plotname in plots:
             meas    = np.asarray(sw.meas['AW'][t])
             weights = 1e4 / sw.plot_size * (dx/4) * np.ones(meas.shape)
             plt.hist(meas, bins=N/4, weights=weights,
-                     histtype='stepfilled', color='red', alpha=0.6, label='aspen meas')
+                     histtype='stepfilled', color='0.5', edgecolor='0.5', label='aspen meas')
 
             plt.plot(aw.x, naw[j], '-r', label='aspen', linewidth=2)
 
             plt.legend(loc='best')
             plt.xlabel('dbh (mm)')
             plt.ylabel('stems per hectare')
-            plt.savefig('plots/%s_projection_%02d.png' % (plotname, j))
+            plt.savefig('plots/proj_%s_%d.png' % (plotname, t))
 
             plt.close()
 
@@ -98,7 +98,7 @@ for plotname in plots:
     plt.xlabel('year')
     plt.ylabel('population')
     plt.title('population vs time ' + plotname)
-    plt.savefig('plots/%s_population.png' % plotname)
+    plt.savefig('plots/pop_%s.png' % plotname)
     plt.close()
 
 #plt.show()

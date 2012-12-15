@@ -26,9 +26,17 @@ routines for several projects:
 
    $ python exp_artr.py
 
-3. 
+3. The 'ABB' project consists of several steps:
 
+   To run all of the experiments:
 
+   $ python exp_abb_run.py
 
+   To generate various plots and statistics:
 
+   $ python exp_abb_eviction.py   # compute eviction rates
+   $ python exp_abb_comp.py       # compare with/without competition in growth model
+   $ python exp_abb_ks.py         # generate ks plots for with/without competition models
+   $ python exp_abb_mort.py       # compare modeled vs const mortality model
+   $ python exp_abb_obspred.py    # generate obs/pred plots and statistics
 

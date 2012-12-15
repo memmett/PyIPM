@@ -33,6 +33,15 @@ def dtnorm(x0, a0=0.0, mu=0.0, sd=1.0):
     return c * sqrt2sqrtpi * exp(-0.5 * x**2) / erfc(a) * (x0 > a0)
 
 
+def dttnorm(x0, min=0.0, max=1.0, mu=0.0, sd=1.0, **kwargs):
+    """Truncated normal distribution."""
+    c = 1.0/sd
+    x = c * (x0 - mu)
+    a = c * (min - mu) / sqrt2
+    b = c * (max - mu) / sqrt2
+    return c * sqrt2sqrtpi * exp(-0.5 * x**2) / ( erf(b) - erf(a) ) * (x0 > min) * (x0 < max)
+
+
 def ks1(data, model, x, ord=np.inf):
     vals = np.sort(data)
 
