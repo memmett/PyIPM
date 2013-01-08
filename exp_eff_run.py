@@ -18,16 +18,16 @@ from exp_eff_mesh import mesh_sizes
 # config
 
 norm_order  = np.inf
-growth_rate = False
+growth_rate = True
 
-kernels = [ 
+kernels = [
     Exact,
     EED,
     Zuidema,
     ]
 
-methods = [ 
-    (MidPoint, {}), 
+methods = [
+    (MidPoint, {}),
     (MidPointZuidema,  {}),
     (INTClark, {}),
     (INTClark, { 'k': 3 }),
@@ -130,17 +130,13 @@ for Kernel in kernels:
     kernel = Kernel()
 
     # compute a reference solution
-    if not hasattr(kernel, 'exact'):
-        logging.info("REFERENCE: computing reference solution")
+    logging.info("REFERENCE: computing reference solution")
 
-        method = GaussQuad('GaussLegendre', k=13)
-        proj, pop, gr, time = compute_projections(kernel, method, 800, growth_rate)
+    method = GaussQuad('GaussLegendre', k=13)
+    proj, pop, gr, time = compute_projections(kernel, method, 800, growth_rate)
 
-        ref_pop = pop[-1]
-        ref_gr  = gr
-
-    else:
-        reference = None
+    ref_pop = pop[-1]
+    ref_gr  = gr
 
     # cycle through methods and project!
     for Method, kwargs in methods:
@@ -153,22 +149,16 @@ for Kernel in kernels:
         counts = []
         times  = []
 
-        if method.name in [ 'MidPoint', 'AdjGaussLegendre(3)' ]:
-            # do a throw-away run to prime it...
-            kernel.reset_count()
-            kernel.setup(method, 100)
-            kernel.update(0)
+        # do a throw-away run to prime it the method...
+        kernel.reset_count()
+        kernel.setup(method, 100)
+        kernel.update(0)
 
         for N in mesh_sizes.get((kernel.name, method.name), []):
 
             proj, pop, gr, time = compute_projections(kernel, method, N, growth_rate)
 
-            if hasattr(kernel, 'exact'):
-                n0 = proj[-1]
-                n1 = kernel.exact(kernel.T[-1]+1, method)
-                errors.append(np.linalg.norm(n0-n1, norm_order))
-            else:
-                errors.append((abs(pop[-1] - ref_pop), abs(gr - ref_gr)))
+            errors.append((abs(pop[-1] - ref_pop), abs(gr - ref_gr)))
 
             counts.append(kernel.count)
             times.append(time)
