@@ -10,9 +10,9 @@ class MidPoint(base.Method):
     name = 'MidPoint'
     mesh_type = 'cell'
 
-    def eval_or_integrate(self, f):
 
-        return f(self.x) / self.dx
+    # def eval_or_integrate(self, f):
+    #     return f(self.x) / self.dx
 
 
     def sample(self, kernel, t):

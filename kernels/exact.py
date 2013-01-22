@@ -8,35 +8,36 @@ from base import Kernel
 
 class Exact(Kernel):
 
-    def __init__(self):
+    def __init__(self, **kwargs):
 
-        self.L = -10.0
-        self.U =  30.0
+        self.L = 0.0
+        self.U = 20.0
         self.T = range(5)
 
         self.name = 'Exact'
         self.time_dependent = False
 
-        self._ss = 0.1          # sigma^2
-        self._mu = 2.05         # mean offset
-        self._theta = 0.02      # survival
+        self._ss = 2.0
+        self._mu = 1.0
+        self._theta = 0.02
 
-        self.mu0 = 0.4
-        self.ss0 = 0.1
+        self.mu0 = 5.0
+        self.ss0 = 1.0
 
 
     def n0(self, x):
 
         return dnorm(x, mu=self.mu0, sd=sqrt(self.ss0))
 
-    
+
     #### general form
 
-    def kernel(self, x, y, t):
+    def kernel(self, x, y, t, **kwargs):
 
         self.increment_count(x, y)
 
         return exp(-self._theta * x**2) * dnorm(y, mu=x+self._mu, sd=sqrt(self._ss))
+
 
     #### y-integrable form
 

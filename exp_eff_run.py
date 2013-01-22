@@ -21,42 +21,46 @@ norm_order  = np.inf
 growth_rate = True
 
 kernels = [
-    Exact,
-    EED,
-    Zuidema,
-    ]
+    (Exact, {}),
+    (EED, {}),
+    (EED, { 'growth_type': 'slow' }),
+    (Zuidema, {}),
+]
 
 methods = [
     (MidPoint, {}),
-    (MidPointZuidema,  {}),
-    (INTClark, {}),
-    (INTClark, { 'k': 3 }),
-    (INTClark, { 'k': 5 }),
+    (MidPointZuidema, {}),
     (INTClark, { 'k': 9 }),
-    (GENClark, {}),
-    (GENClark, { 'k': 3 }),
-    (GENClark, { 'k': 5 }),
     (GENClark, { 'k': 9 }),
-    (GENClark, { 'k': 3, 'qtype': 'ClenshawCurtis' }),
-    (GENClark, { 'k': 5, 'qtype': 'ClenshawCurtis' }),
-    (GENClark, { 'k': 9, 'qtype': 'ClenshawCurtis' }),
-    (GaussQuad, {}),
-    (GaussQuad, { 'k': 3 }),
-    (GaussQuad, { 'k': 5 }),
     (GaussQuad, { 'k': 9 }),
-    (GaussQuad, { 'k': 3, 'adjust': True }),
-    (GaussQuad, { 'k': 5, 'adjust': True }),
     (GaussQuad, { 'k': 9, 'adjust': True }),
-    (GaussQuad, { 'qtype': 'ClenshawCurtis' }),
-    (GaussQuad, { 'qtype': 'ClenshawCurtis', 'k': 3 }),
-    (GaussQuad, { 'qtype': 'ClenshawCurtis', 'k': 5 }),
     (GaussQuad, { 'qtype': 'ClenshawCurtis', 'k': 9 }),
-    ]
+
+    # disabled below after receiving comments from reviewers
+  # (INTClark, {}),
+  # (INTClark, { 'k': 3 }),
+  # (INTClark, { 'k': 5 }),
+  # (GENClark, {}),
+  # (GENClark, { 'k': 3 }),
+  # (GENClark, { 'k': 5 }),
+  # (GENClark, { 'k': 3, 'qtype': 'ClenshawCurtis' }),
+  # (GENClark, { 'k': 5, 'qtype': 'ClenshawCurtis' }),
+  # (GENClark, { 'k': 9, 'qtype': 'ClenshawCurtis' }),
+  # (GaussQuad, {}),
+  # (GaussQuad, { 'k': 3 }),
+  # (GaussQuad, { 'k': 5 }),
+  # (GaussQuad, { 'k': 3, 'adjust': True }),
+  # (GaussQuad, { 'k': 5, 'adjust': True }),
+  # (GaussQuad, { 'qtype': 'ClenshawCurtis' }),
+  # (GaussQuad, { 'qtype': 'ClenshawCurtis', 'k': 3 }),
+  # (GaussQuad, { 'qtype': 'ClenshawCurtis', 'k': 5 }),
+]
 
 ###############################################################################
 # compute and plot projections
 
-def compute_projections(kernel, method, mesh_size, growth_rate=False):
+def compute_projections(kernel, method, mesh_size,
+                        growth_rate=False, plot_kernel=False):
     """Compute projections and populations."""
 
     logging.info("PROJECT: %s, %s, %d", kernel.name, method.name, mesh_size)
@@ -68,6 +72,11 @@ def compute_projections(kernel, method, mesh_size, growth_rate=False):
     kernel.setup(method, mesh_size)
     kernel.update(0)
     runtime = clock() - t1
+
+    if plot_kernel:
+      import pylab
+      pylab.imshow(kernel.method.A)
+      pylab.show()
 
     projections = np.zeros((len(T), len(kernel.x)))
     populations = np.zeros(len(T))
@@ -87,20 +96,27 @@ def compute_projections(kernel, method, mesh_size, growth_rate=False):
         n0 = n1
 
     if growth_rate:
-        import scipy.sparse.linalg.eigen
+        from scipy.sparse.linalg.eigen import eigs, ArpackNoConvergence
 
         logging.debug("PROJECT: computing dominant eigenvalue")
         try:
-            evals = scipy.sparse.linalg.eigen.eigs(
-                kernel.projection_matrix, k=1, return_eigenvectors=False)
-            growth_rate = evals[0]
-        except:
-            growth_rate = 0.0
+            evals = eigs(kernel.projection_matrix,
+                         k=1, tol=1e-14, maxiter=500, sigma=1.0, which='LM',
+                         return_eigenvectors=False)
+            gr = evals[0]
+
+        except ArpackNoConvergence as err:
+            logging.info("WARNING: EVALS: ARPACK didn't converge")
+            gr = np.nan
+
+        # import scipy.linalg
+        # evals = scipy.linalg.eig(kernel.projection_matrix, left=False, right=False)
+        # gr = abs(evals).max()
 
     else:
-        growth_rate = 0.0
+        gr = 0.0
 
-    return projections, populations, growth_rate, runtime
+    return projections, populations, gr, runtime
 
 
 ###############################################################################
@@ -125,9 +141,9 @@ logging.info("PROJECT: RUN STARTED AT: %s", time.asctime())
 
 measurements = collections.defaultdict(dict)
 
-for Kernel in kernels:
+for Kernel, kernel_init_args in kernels:
 
-    kernel = Kernel()
+    kernel = Kernel(**kernel_init_args)
 
     # compute a reference solution
     logging.info("REFERENCE: computing reference solution")
@@ -139,9 +155,9 @@ for Kernel in kernels:
     ref_gr  = gr
 
     # cycle through methods and project!
-    for Method, kwargs in methods:
+    for Method, method_init_args in methods:
 
-        method = Method(**kwargs)
+        method = Method(**method_init_args)
 
         logging.info("PROJECT: method: %s", method.name)
 
@@ -158,7 +174,7 @@ for Kernel in kernels:
 
             proj, pop, gr, time = compute_projections(kernel, method, N, growth_rate)
 
-            errors.append((abs(pop[-1] - ref_pop), abs(gr - ref_gr)))
+            errors.append((pop[-1] - ref_pop, gr - ref_gr))
 
             counts.append(kernel.count)
             times.append(time)

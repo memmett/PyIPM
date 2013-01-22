@@ -10,30 +10,31 @@ def unpack(errs):
         pop.append(err[0])
         growth.append(err[1])
 
-    return pop, growth
+    return np.asarray(pop), np.asarray(growth)
 
 linestyles = {
     'MidPoint':            '-ok',
     'Zuidema':             '-sk',
-    'ClenshawCurtis':      ':ob',
-    'ClenshawCurtis(3)':   '-.^b',
-    'ClenshawCurtis(5)':   '--vb',
-    'ClenshawCurtis(9)':   '-sb',
-    'GaussLegendre':       ':or',
-    'GaussLegendre(3)':    '-.^r',
-    'GaussLegendre(5)':    '--vr',
-    'GaussLegendre(9)':    '-sr',
-    'AdjGaussLegendre(3)': '-.^m',
-    'AdjGaussLegendre(5)': '--vm',
-    'AdjGaussLegendre(9)': '-sm',
-    'GENClarkQP':          '-og',
-    'GENClarkGL(3)':       '-.^g',
-    'GENClarkGL(5)':       '--vg',
-    'GENClarkGL(9)':       '-sg',
-    'INTClarkQP':          '-oc',
-    'INTClarkGL(3)':       '-.^c',
-    'INTClarkGL(5)':       '--vc',
-    'INTClarkGL(9)':       '-sc',
+    'ClenshawCurtis(9)':   '-.db',
+    'GaussLegendre(9)':    '-.^r',
+    'AdjGaussLegendre(9)': '-.vm',
+    'GENClarkGL(9)':       '--<g',
+    'INTClarkGL(9)':       '-->c',
+
+    # 'ClenshawCurtis':      ':ob',
+    # 'ClenshawCurtis(3)':   '-.^b',
+    # 'ClenshawCurtis(5)':   '--vb',
+    # 'GaussLegendre':       ':or',
+    # 'GaussLegendre(3)':    '-.^r',
+    # 'GaussLegendre(5)':    '--vr',
+    # 'AdjGaussLegendre(3)': '-.^m',
+    # 'AdjGaussLegendre(5)': '--vm',
+    # 'GENClarkQP':          '-og',
+    # 'GENClarkGL(3)':       '-.^g',
+    # 'GENClarkGL(5)':       '--vg',
+    # 'INTClarkQP':          '-oc',
+    # 'INTClarkGL(3)':       '-.^c',
+    # 'INTClarkGL(5)':       '--vc',
     }
 
 
@@ -45,7 +46,7 @@ def plot_projections(kernel, method, projections, populations):
 
     # plot projections
     plt.figure()
-    plt.title('Projections: %s: %s (%d)' 
+    plt.title('Projections: %s: %s (%d)'
               % (kernel.name, method.name, N))
     for j, t in enumerate(T):
         plt.plot(kernel.x, projections[j], '-r')
@@ -54,7 +55,7 @@ def plot_projections(kernel, method, projections, populations):
 
     # plot population vs time
     plt.figure()
-    plt.title('Population: %s: %s (%d)' 
+    plt.title('Population: %s: %s (%d)'
               % (kernel.name, method.name, N))
     plt.plot(T, populations, 'o-k')
     plt.xlabel('time')
@@ -67,58 +68,56 @@ def plot_errors(errors, mesh_sizes, linestyles=linestyles):
 
     for kernel in errors:
 
-        # error vs mesh size
-        plt.figure(figsize=(7, 6))
-        plt.axes([0.125, 0.1, 0.8, 0.55])
-        # plt.title('Error vs mesh size: ' + str(kernel))
-        for method in sorted(errors[kernel]):
-            if method.find('ClarkCC') > 0:
-                continue
-
-            errs, cnts, tims = errors[kernel][method]
-            pop, gwroth = unpack(errs)
-            plt.loglog(mesh_sizes[kernel, method], 
-                       pop, linestyles.get(method, '-k'), label=method)
-        plt.xlabel('N - mesh size')
-        plt.ylabel('absolute error')
-        plt.legend(bbox_to_anchor=(0.5, 1.1), loc=8,
-                   ncol=3, borderaxespad=0.)
-        plt.savefig('plots/ErrorMesh_%s.png' % kernel)
-
         # error vs computational cost
-        plt.figure(figsize=(7, 6))
-        plt.axes([0.125, 0.1, 0.8, 0.55])
-        # plt.title('Error vs computational cost: ' + str(kernel))
-        for method in sorted(errors[kernel]):
-            if method.find('ClarkCC') > 0:
-                continue
+        fig, ax = plt.subplots(1, 2, sharey=True, figsize=(7, 6))
+        fig.subplots_adjust(top=0.75)
 
+        for method in sorted(errors[kernel]):
             errs, cnts, tims = errors[kernel][method]
-            pop, gwroth = unpack(errs)
-            plt.loglog(cnts, pop, linestyles.get(method, '-k'), label=method)
-        plt.xlabel('cost (number of kernel evaluations)')
-        plt.ylabel('absolute error')
-        plt.legend(bbox_to_anchor=(0.5, 1.1), loc=8,
-                   ncol=3, borderaxespad=0.)
+            pop, growth = unpack(errs)
+            print kernel, method
+            print '  ', pop
+            print '  ', growth
+            ax[0].loglog(cnts, abs(pop),
+                         linestyles.get(method, '-k'), label=method)
+            ax[1].loglog(cnts, abs(growth),
+                         linestyles.get(method, '-k'), label=method)
+
+        ax[0].set_title('population error')
+        ax[1].set_title('growth rate error')
+        ax[0].set_ylabel('absolute error')
+        for a in ax:
+          a.set_xlabel('no. of kernel evals.')
+
+        plt.ylim(1e-16, 1e1)
+        plt.legend(bbox_to_anchor=(0.5, 0.8), loc=8, ncol=3, borderaxespad=0.0,
+                   bbox_transform=fig.transFigure)
+
         plt.savefig('plots/ErrorCost_%s.png' % kernel)
 
-
         # error vs run time
-        plt.figure(figsize=(7, 6))
-        plt.axes([0.125, 0.1, 0.8, 0.55])
+        fig, ax = plt.subplots(1, 2, sharey=True, figsize=(7, 6))
+        fig.subplots_adjust(top=0.75)
 
         for method in sorted(errors[kernel]):
-            if method.find('ClarkCC') > 0:
-                continue
-
             errs, cnts, tims = errors[kernel][method]
-            pop, gwroth = unpack(errs)
+            pop, growth = unpack(errs)
             tims = np.asarray(tims)
-            if not np.any(tims <= 0.0):
-                plt.loglog(np.asarray(tims), pop, linestyles.get(method, '-k'), label=method)
+            tims[ tims <= 0.0 ] = 1e-4
+            # if not np.any(tims <= 0.0):
+            ax[0].loglog(np.asarray(tims), abs(pop),
+                         linestyles.get(method, '-k'), label=method)
+            ax[1].loglog(np.asarray(tims), abs(growth),
+                         linestyles.get(method, '-k'), label=method)
 
-        plt.xlabel('run time (s)')
-        plt.ylabel('absolute error')
-        plt.legend(bbox_to_anchor=(0.5, 1.1), loc=8,
-                   ncol=3, borderaxespad=0.)
+        ax[0].set_title('population error')
+        ax[1].set_title('growth rate error')
+        ax[0].set_ylabel('absolute error')
+        for a in ax:
+          a.set_xlabel('run time (s)')
+
+        plt.ylim(1e-16, 1e1)
+        plt.legend(bbox_to_anchor=(0.5, 0.8), loc=8, ncol=3, borderaxespad=0.0,
+                   bbox_transform=fig.transFigure)
+
         plt.savefig('plots/ErrorTime_%s.png' % kernel)

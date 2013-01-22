@@ -7,13 +7,13 @@ from base import Kernel
 
 class EED(Kernel):
 
-    def __init__(self):
+    def __init__(self, growth_type='orig'):
 
         Kernel.__init__(self)
 
         self.L =  0.0
         self.U = 10.0
-        self.T = range(0, 5)
+        self.T = range(5)
 
         self.name = 'EED'
         self.time_independent = True
@@ -22,8 +22,12 @@ class EED(Kernel):
         self.growth_params    = [ 0.37, 0.73, 0.127, 0.23 ]
         self.fecundity_params = [ 0.034, 0.038 ]
 
+        if growth_type == 'slow':
+            self.growth_params = [ 0.0, 1.01, 0.005, 0.001 ]
+            self.name          = 'EEDSlow'
+
         self.discontinuities  = [ 0.15, 0.25 ]
- 
+
 
     def n0(self, x):
 
@@ -59,7 +63,7 @@ class EED(Kernel):
         return f1 * f2
 
 
-    def kernel(self, x, y, t):
+    def kernel(self, x, y, t, **kwargs):
 
         self.increment_count(x, y)
 
@@ -109,5 +113,5 @@ class EED(Kernel):
 
         if y2 > 0.25:
             y2 = 0.25
-        
+
         return (y2 - y1) / (0.25 - 0.15)

@@ -1,6 +1,6 @@
-# 
+#
 # Dictionary of mesh sizes used in the numerical experiments.
-# 
+#
 
 mesh_sizes = {
 
@@ -65,6 +65,39 @@ mesh_sizes = {
     ('EED', 'ClenshawCurtis(3)'): [ 50, 100, 200, 400 ],
     ('EED', 'ClenshawCurtis(5)'): [ 50, 100, 200, 400 ],
     ('EED', 'ClenshawCurtis(9)'): [ 50, 100, 200, 400 ],
+
+    ('EEDSlow', 'MidPoint'): [ 100, 200, 400, 800, 1600 ],
+    ('EEDSlow', 'Zuidema'):  [ 50, 100, 200, 400 ],
+
+    ('EEDSlow', 'GENClarkQP'):     [ 100, 200 ],
+    ('EEDSlow', 'GENClarkGL(3)'):  [ 100, 200, 400 ],
+    ('EEDSlow', 'GENClarkGL(5)'):  [ 100, 200, 400 ],
+    ('EEDSlow', 'GENClarkGL(9)'):  [ 100, 200, 400 ],
+    ('EEDSlow', 'GENClarkCC(3)'):  [ 100, 200, 400 ],
+    ('EEDSlow', 'GENClarkCC(5)'):  [ 100, 200, 400 ],
+    ('EEDSlow', 'GENClarkCC(9)'):  [ 100, 200, 400 ],
+
+    ('EEDSlow', 'INTClarkQP'):     [ 100, 200 ],
+    ('EEDSlow', 'INTClarkGL(3)'):  [ 100, 200, 400 ],
+    ('EEDSlow', 'INTClarkGL(5)'):  [ 100, 200, 400 ],
+    ('EEDSlow', 'INTClarkGL(9)'):  [ 100, 200, 400 ],
+    ('EEDSlow', 'INTClarkCC(3)'):  [ 100, 200, 400 ],
+    ('EEDSlow', 'INTClarkCC(5)'):  [ 100, 200, 400 ],
+    ('EEDSlow', 'INTClarkCC(9)'):  [ 100, 200, 400 ],
+
+    ('EEDSlow', 'GaussLegendre'):    [ 20, 40, 80, 160, 320, 640 ],
+    ('EEDSlow', 'GaussLegendre(3)'): [ 50, 100, 200, 400 ],
+    ('EEDSlow', 'GaussLegendre(5)'): [ 50, 100, 200, 400 ],
+    ('EEDSlow', 'GaussLegendre(9)'): [ 50, 100, 200, 400 ],
+
+    ('EEDSlow', 'AdjGaussLegendre(3)'): [ 50, 100, 200, 400 ],
+    ('EEDSlow', 'AdjGaussLegendre(5)'): [ 50, 100, 200, 400 ],
+    ('EEDSlow', 'AdjGaussLegendre(9)'): [ 50, 100, 200, 400 ],
+
+    ('EEDSlow', 'ClenshawCurtis'):    [ 20, 40, 80, 160, 320, 640 ],
+    ('EEDSlow', 'ClenshawCurtis(3)'): [ 50, 100, 200, 400 ],
+    ('EEDSlow', 'ClenshawCurtis(5)'): [ 50, 100, 200, 400 ],
+    ('EEDSlow', 'ClenshawCurtis(9)'): [ 50, 100, 200, 400 ],
 
     ('Zuidema', 'MidPoint'): [ 200, 400, 800, 1600 ],
     ('Zuidema', 'Zuidema'):  [ 200, 400, 800 ],

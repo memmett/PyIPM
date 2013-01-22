@@ -7,16 +7,17 @@ from base import Kernel
 
 class Zuidema(Kernel):
 
-    name = 'Zuidema'
-    time_dependent = False
 
-    def __init__(self):
+    def __init__(self, **kwargs):
 
         Kernel.__init__(self)
 
         self.L =   1.0
         self.U = 150.0
-        self.T = range(0, 5)
+        self.T = range(5)
+
+        self.name = 'Zuidema'
+        self.time_dependent = False
 
         # parashorea chinensis
         self.survival_params = [ 0.98 ]
@@ -53,7 +54,7 @@ class Zuidema(Kernel):
         return dnorm(y, mu=x+m, sd=sd)
 
 
-    def kernel(self, x, y, t):
+    def kernel(self, x, y, t, **kwargs):
 
         self.increment_count(x, y)
 
@@ -86,7 +87,7 @@ class Zuidema(Kernel):
         A = zeros((N, 4))
 
         a54, mu, sd = self.k_ts_params
-        
+
         A[:, -1] = a54 * dtnorm(x, L, mu, sd)
 
         return A
@@ -129,7 +130,7 @@ class Zuidema(Kernel):
         n1[4:] = self.method.eval_or_integrate(n0)
 
         return n1
-        
+
 
     def project(self, n0):
         return dot(self.A, n0)
