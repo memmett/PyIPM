@@ -10,7 +10,7 @@ import pylab as plt
 
 from pprint import pprint
 
-from exp_abb_kernels import abb_init_kernels
+from exp_abb_kernels import abb_init_kernels, ignore
 
 
 ###############################################################################
@@ -24,6 +24,9 @@ def obsprd_plot(plots, flavour):
     }
 
     for plotname in plots:
+
+        if plotname in ignore:
+            continue
 
         plot = plots[plotname]
 
@@ -39,6 +42,10 @@ def obsprd_plot(plots, flavour):
             j = T.index(obs_year)
             pops['prd']['sw'].append(sw.population(nsw[j]))
             pops['prd']['aw'].append(aw.population(naw[j]))
+
+        tmp = np.asarray(pops['obs']['sw'])
+        if any(tmp > 15000):
+            print plotname
 
 
     stats = { 'sw': {}, 'aw': {} }
@@ -86,7 +93,7 @@ def obsprd_plot(plots, flavour):
 
 
 
-def mktable(stats, label, caption):
+def mktable(comp, ncomp, aw, label, caption):
 
     from string import Template
 
@@ -96,19 +103,47 @@ def mktable(stats, label, caption):
     table = LaTexTemplate(r"""
 \begin{table}
   \begin{center}
-    \begin{tabular}{lrrcrr} \toprule
-                  & \multicolumn{2}{c}{Spruce} & \hspace{2em} & \multicolumn{2}{c}{Aspen} \\
-                  & statistic  & p-value        &              & statistic & p-value       \\ \midrule
-      $F$         & @sw_F     & @sw_F_p         &              & @aw_F     & @aw_F_p       \\
-      $t$         & @sw_t     & @sw_t_p         &              & @aw_t     & @aw_t_p       \\
-      $Theil$     & @sw_theil & @sw_theil_p     &              & @aw_theil & @aw_theil_p   \\
-      $U$         & @sw_mannwhitneyu & @sw_mannwhitneyu_p &  & @aw_mannwhitneyu & @aw_mannwhitneyu_p   \\
-      $Pearson r$ & @sw_pearsonr & @sw_pearsonr_p &            & @aw_pearsonr & @aw_pearsonr_p   \\
-      $MSEP$      & @sw_msep & @sw_msep_p       &              & @aw_msep & @aw_msep_p   \\
-      $MC$      & @sw_mc & @sw_mc_p       &              & @aw_mc & @aw_mc_p   \\
-      $SC$      & @sw_sc & @sw_sc_p       &              & @aw_sc & @aw_sc_p   \\
-      $RC$      & @sw_rc & @sw_rc_p       &              & @aw_rc & @aw_rc_p   \\
-                          \bottomrule
+    \begin{tabular}{lrrcrrcrr} \toprule
+ & \multicolumn{2}{c}{Spruce}
+ & \hspace{2em}
+ & \multicolumn{2}{c}{Spruce}
+ & \hspace{2em}
+ & \multicolumn{2}{c}{Aspen} \\
+ & \multicolumn{2}{c}{(with comp)}
+ & \hspace{2em}
+ & \multicolumn{2}{c}{without comp}
+ & \hspace{2em}
+ & \multicolumn{2}{c}{(with and without comp)} \\
+ & statistic & p-value &
+ & statistic & p-value &
+ & statistic & p-value \\ \midrule
+ $F$         & @F           & @F_p
+   & & @F_nc            & @F_nc_p
+   & & @F_aw            & @F_aw_p \\
+ $t$         & @t           & @t_p
+   & & @t_nc            & @t_nc_p
+   & & @t_aw            & @t_aw_p \\
+ Theil       & @theil   & @theil_p
+   & & @theil_nc        & @theil_nc_p
+   & & @theil_aw        & @theil_aw_p \\
+ $U$         & @mannwhitneyu & @mannwhitneyu_p
+   & & @mannwhitneyu_nc & @mannwhitneyu_nc_p
+   & & @mannwhitneyu_aw & @mannwhitneyu_aw_p \\
+ Pearson $r$ & @pearsonr     & @pearsonr_p
+   & & @pearsonr_nc     & @pearsonr_nc_p
+   & & @pearsonr_aw     & @pearsonr_aw_p \\
+ MSEP        & @msep         & @msep_p
+   & & @msep_nc         & @msep_nc_p
+   & & @msep_aw         & @msep_aw_p  \\
+ MC          & @mc           & @mc_p
+   & & @mc_nc           & @mc_nc_p
+   & & @mc_aw           & @mc_aw_p \\
+ SC          & @sc           & @sc_p
+   & & @sc_nc           & @sc_nc_p
+   & & @sc_aw           & @sc_aw_p \\
+ RC          & @rc           & @rc_p
+   & & @rc_nc           & @rc_nc_p
+   & & @rc_aw           & @rc_aw_p \\ \bottomrule
     \end{tabular}
   \end{center}
   \label{@label}
@@ -118,19 +153,43 @@ def mktable(stats, label, caption):
 
     statvals = {}
 
-    for species in stats:
-        for stat in stats[species]:
-            if isinstance(stats[species][stat], tuple):
-                val, pval = stats[species][stat]
-                val  = "%.3g" % val
-                pval = "%.3g" % pval
-            else:
-                val  = stats[species][stat]
-                val  = "%.3g" % val
-                pval = '--'
+    for stat in comp:
+        if isinstance(comp[stat], tuple):
+            val, pval = comp[stat]
+            val  = "%.3g" % abs(val)
+            pval = "%.3g" % pval
 
-            statvals[species + '_' + stat]        = val
-            statvals[species + '_' + stat + '_p'] = pval
+            valnc, pvalnc = ncomp[stat]
+            valnc  = "%.3g" % abs(valnc)
+            pvalnc = "%.3g" % pvalnc
+
+            valaw, pvalaw = aw[stat]
+            valaw  = "%.3g" % abs(valaw)
+            pvalaw = "%.3g" % pvalaw
+
+        else:
+            val  = comp[stat]
+            val  = "%.3g" % val
+            pval = '--'
+
+            valnc  = ncomp[stat]
+            valnc  = "%.3g" % valnc
+            pvalnc = '--'
+
+            valaw  = aw[stat]
+            valaw  = "%.3g" % valaw
+            pvalaw = '--'
+
+
+        statvals[stat]        = val
+        statvals[stat + '_p'] = pval
+
+        statvals[stat + '_nc']   = valnc
+        statvals[stat + '_nc_p'] = pvalnc
+
+        statvals[stat + '_aw']   = valaw
+        statvals[stat + '_aw_p'] = pvalaw
+
 
     return table.substitute(label=label, caption=caption, **statvals)
 
@@ -142,18 +201,16 @@ if __name__ == '__main__':
     with open('out/abb_with_comp.pkl', 'r') as f:
         plots = pickle.load(f)
 
-    stats = obsprd_plot(plots, 'with_comp')
-    pprint(stats)
-
-    print mktable(stats, 'tab:obsprdstats', 'Observed vs predicted statistics')
+    stats1 = obsprd_plot(plots, 'with_comp')
+    pprint(stats1)
 
 
     with open('out/abb_with_nocomp.pkl', 'r') as f:
         plots = pickle.load(f)
 
-    stats = obsprd_plot(plots, 'with_nocomp')
-    pprint(stats)
+    stats2 = obsprd_plot(plots, 'with_nocomp')
+    pprint(stats2)
 
-    print mktable(stats, 'tab:obsprdstatsnc', 'Observed vs predicted statistics (no comp)')
+    print mktable(stats1['sw'], stats2['sw'], stats1['aw'], 'tab:obsprdstats', 'Observed vs predicted statistics')
 
     # plt.show()

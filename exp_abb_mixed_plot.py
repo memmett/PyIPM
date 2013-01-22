@@ -28,6 +28,10 @@ pens = {
     'DC': { 'color': 'm', 'marker': 'v' },
 }
 
+figsph, sph = plt.subplots(1, 3, sharey=True)
+figba,  ba  = plt.subplots(1, 3, sharey=True)
+
+
 for plotname in plots:
 
     plot = plots[plotname]
@@ -59,30 +63,50 @@ for plotname in plots:
     #     plt.plot(sw.x, nsw[j], '-b')
     #     plt.plot(aw.x, naw[j], '-r')
 
-    psw = [ sw.population(nsw[j]) for j in range(len(T)) ]
-    paw = [ aw.population(naw[j]) for j in range(len(T)) ]
+    psw = np.asarray([ sw.population(nsw[j]) for j in range(len(T)) ])
+    paw = np.asarray([ aw.population(naw[j]) for j in range(len(T)) ])
 
     psw[0] = sum(nsw[0])
     paw[0] = sum(naw[0])
 
-    plt.figure(1)
-    plt.plot(T[1:], psw[1:], label=plotname, **pens[plotname])
+    sph[0].plot(T[1:], psw[1:], label=plotname, **pens[plotname])
+    sph[1].plot(T[1:], paw[1:], label=plotname, **pens[plotname])
+    sph[2].plot(T[1:], psw[1:] + paw[1:], label=plotname, **pens[plotname])
 
-    plt.figure(2)
-    plt.plot(T[1:], paw[1:], label=plotname, **pens[plotname])
+    basal_area = lambda k, s: np.pi * np.dot(k.method.P, s * (k.x/2)**2) / 1e6
+    swba = np.asarray([ basal_area(sw, nsw[j]) for j in range(len(T)) ])
+    awba = np.asarray([ basal_area(aw, naw[j]) for j in range(len(T)) ])
 
-for f in [ 1, 2 ]:
-    plt.figure(f)
-    plt.legend(loc='best')
-    plt.xlabel('year')
-    plt.ylabel('population')
-    #plt.title('population vs time ' + plotname)
+    ba[0].plot(T[1:], swba[1:], label=plotname, **pens[plotname])
+    ba[1].plot(T[1:], awba[1:], label=plotname, **pens[plotname])
+    ba[2].plot(T[1:], swba[1:] + awba[1:], label=plotname, **pens[plotname])
 
-plt.figure(1)
-plt.savefig('plots/popmixed_sw.png')
 
-plt.figure(2)
-plt.savefig('plots/popmixed_aw.png')
+# sph
+sph[2].legend(loc='best')
+
+sph[0].set_ylabel('stems per hectare')
+sph[1].set_xlabel('year')
+
+sph[0].set_title('Spruce')
+sph[1].set_title('Aspen')
+sph[2].set_title('Total')
+
+figsph.savefig('plots/sphmixed.png')
+
+
+# ba
+ba[0].legend(loc='best')
+
+ba[0].set_ylabel('basal area')
+ba[1].set_xlabel('year')
+
+ba[0].set_title('Spruce')
+ba[1].set_title('Aspen')
+ba[2].set_title('Total')
+
+figba.savefig('plots/bamixed.png')
+
 
 plt.show()
 

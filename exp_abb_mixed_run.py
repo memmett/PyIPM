@@ -47,6 +47,8 @@ sw = ABBSW()
 sw.L, sw.U = L, U
 sw.setup(MidPoint(), N)
 
+
+# dens: # / 10 m^2
 scenarios = {
     'C': {
         'sw': { 'dens': 8.846, 'mu': 25.7, 'sd': 17.1, 'min':  3.8, 'max': 53.5 },
@@ -70,8 +72,8 @@ for scenario in scenarios:
     swp = scenarios[scenario]['sw']
     awp = scenarios[scenario]['aw']
 
-    sw0 = swp['dens'] * dttnorm(sw.x, **swp)
-    aw0 = awp['dens'] * dttnorm(sw.x, **awp)
+    sw0 = swp['dens'] * dttnorm(sw.x, **swp) * 1000
+    aw0 = awp['dens'] * dttnorm(sw.x, **awp) * 1000
 
     # import pylab as plt
     # plt.figure()

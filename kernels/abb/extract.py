@@ -13,13 +13,13 @@ SW = 18                  # integer level corresponding to R 'SW' level
 AW = 3                   # integer level corresponding to R 'AW' level
 
 plotsizes = []
+ignore = []
+keep = []
+
 
 for name in names:
-    p = psp[ psp["plot"] == name ]
-    years = sorted(set(p["year"]))
 
-    if len(years) < 2:
-        continue
+    p = psp[ psp["plot"] == name ]
 
     # cache plotsize
     psizes = list(set(p["plotsize"]))
@@ -27,23 +27,53 @@ for name in names:
         continue
     plotsizes.append({ 'plot': int(name), 'plotsize': psizes[0] })
 
-    # check number of sw and aw for first year
-    fy = min(years)
-    swfy = p[ (p["year"] == fy) & (p["spec"] == SW) ]
-    awfy = p[ (p["year"] == fy) & (p["spec"] == AW) ]
 
-    nsw = len(set(swfy["tree"]))
-    naw = len(set(awfy["tree"]))
-
-    if naw > nsw or nsw < 30 or naw < 10:
+    # check measurement years
+    years = sorted(set(p["year"]))
+    if len(years) < 2:
         continue
 
-    # check mean size of sw at first year
-    mdbh = swfy["dbh"].mean()
-    if mdbh < 160.0:
+    # check species composition
+    fy  = min(years)
+    pfy = p[ p["year"] == fy ]
+    nfy = len(pfy)
+
+    species = set(pfy["spec"])
+
+    # skewed = False
+    # for spec in species:
+    #     if spec in [ SW, AW ]:
+    #         continue
+    #     nspec = len(pfy[ pfy["spec"] == spec ])
+    #     if float(nspec) / nfy > 0.3:
+    #         # print spec, nspec, nfy
+    #         skewed = True
+
+    # if skewed:
+    #     print "skipping %s: too many trees of other species present" % name
+    #     ignore.append(name)
+    #     continue
+
+    swfy = pfy[ pfy["spec"] == SW ]
+    awfy = pfy[ pfy["spec"] == AW ]
+
+    nsw = len(swfy)
+    naw = len(awfy)
+
+    if float(nsw)/nfy < 0.2 or float(naw)/nfy < 0.2:
+        print "skipping %s: not enough spruce and/or aspen present" % name
+        ignore.append(str(int(name)))
         continue
 
-    # grad tree ids at first year and filter
+    print 'kept: %s' % name
+    keep.append(str(int(name)))
+
+    # # check mean size of sw at first year
+    # mdbh = swfy["dbh"].mean()
+    # if mdbh < 160.0:
+    #     continue
+
+    # grab tree ids at first year and filter
     swtrees = list(set(swfy["tree"]))
     awtrees = list(set(awfy["tree"]))
 
@@ -61,6 +91,8 @@ for name in names:
     del plot['tree']
     del plot['plot']
     plot.to_csv(str(int(name)) + '.csv', index=False)
+
+print len(ignore), len(keep)
 
 plotsizes = pandas.DataFrame(plotsizes)
 plotsizes.to_csv("plotsizes.csv", index=False)

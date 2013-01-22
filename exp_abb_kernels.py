@@ -12,6 +12,8 @@ flavours = {
     'eviction':      { 'no_mort': True },
 }
 
+# plots to ignore
+ignore = [ '12', '210', '291', '344', '327', '487', '13', '34', '296' ]
 
 def abb_init_kernels(L, U, N, flavour, plotname):
     """Instantiate SW and AW kernels according to parameters and flavour.

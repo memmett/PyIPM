@@ -12,7 +12,7 @@ import pylab as plt
 
 from pprint import pprint
 
-from exp_abb_kernels import abb_init_kernels
+from exp_abb_kernels import abb_init_kernels, ignore
 from utils.stats import dent_blackie
 
 
@@ -64,6 +64,9 @@ obs = []
 prd = { 'model': [], 'const': [] }
 
 for plotname in plots_const:
+
+    if plotname in ignore:
+        continue
 
     plot1 = plots_const[plotname]
     plot2 = plots_model[plotname]
