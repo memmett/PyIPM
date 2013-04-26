@@ -69,43 +69,47 @@ for plotname in plots:
     psw[0] = sum(nsw[0])
     paw[0] = sum(naw[0])
 
-    sph[0].plot(T[1:], psw[1:], label=plotname, **pens[plotname])
-    sph[1].plot(T[1:], paw[1:], label=plotname, **pens[plotname])
-    sph[2].plot(T[1:], psw[1:] + paw[1:], label=plotname, **pens[plotname])
+    sage = np.asarray(T[1:]) + 20
+
+    sph[0].plot(sage, psw[1:], label=plotname, **pens[plotname])
+    sph[1].plot(sage, paw[1:], label=plotname, **pens[plotname])
+    sph[2].plot(sage, psw[1:] + paw[1:], label=plotname, **pens[plotname])
 
     basal_area = lambda k, s: np.pi * np.dot(k.method.P, s * (k.x/2)**2) / 1e6
     swba = np.asarray([ basal_area(sw, nsw[j]) for j in range(len(T)) ])
     awba = np.asarray([ basal_area(aw, naw[j]) for j in range(len(T)) ])
 
-    ba[0].plot(T[1:], swba[1:], label=plotname, **pens[plotname])
-    ba[1].plot(T[1:], awba[1:], label=plotname, **pens[plotname])
-    ba[2].plot(T[1:], swba[1:] + awba[1:], label=plotname, **pens[plotname])
+    ba[0].plot(sage, swba[1:], label=plotname, **pens[plotname])
+    ba[1].plot(sage, awba[1:], label=plotname, **pens[plotname])
+    ba[2].plot(sage, swba[1:] + awba[1:], label=plotname, **pens[plotname])
 
 
 # sph
 sph[2].legend(loc='best')
 
 sph[0].set_ylabel('stems per hectare')
-sph[1].set_xlabel('year')
+sph[1].set_xlabel('stand age (years)')
 
 sph[0].set_title('Spruce')
 sph[1].set_title('Aspen')
 sph[2].set_title('Total')
 
 figsph.savefig('plots/sphmixed.png')
+figsph.savefig('plots/sphmixed.pdf')
 
 
 # ba
 ba[0].legend(loc='best')
 
 ba[0].set_ylabel('basal area')
-ba[1].set_xlabel('year')
+ba[1].set_xlabel('stand age (years)')
 
 ba[0].set_title('Spruce')
 ba[1].set_title('Aspen')
 ba[2].set_title('Total')
 
 figba.savefig('plots/bamixed.png')
+figba.savefig('plots/bamixed.pdf')
 
 
 plt.show()

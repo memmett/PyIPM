@@ -3,6 +3,8 @@
 Generate obs vs prd plots for a particular flavour.
 """
 
+import matplotlib
+matplotlib.rcParams['font.size'] = 14
 
 import numpy as np
 import cPickle as pickle
@@ -78,10 +80,10 @@ def obsprd_plot(plots, flavour):
 
         plt.figure()
         plt.plot(prd, obs, 'ok', label='data', alpha=0.5)
-        plt.plot(x,   yex, '--r', label='exact')
-        plt.plot(x,   yhat, '-b', label='fit')
-        plt.ylabel('observed stems per hectare')
-        plt.xlabel('predicted stems per hectare')
+        plt.plot(x,   yex, '-r', label='y=x')
+        plt.plot(x,   yhat, '-b', label='best fit')
+        plt.ylabel('observed')
+        plt.xlabel('predicted')
         plt.legend(loc='best')
         plt.savefig('plots/obsprd_%s_%s.png' % (flavour, species))
         plt.close()

@@ -20,6 +20,9 @@ def comp_ks_plots(plots1, plots2, flavour):
 
     for plotname in plots1:
 
+        if plotname != '237':
+            continue
+
         plot1 = plots1[plotname]
         plot2 = plots2[plotname]
 
@@ -35,6 +38,9 @@ def comp_ks_plots(plots1, plots2, flavour):
         for j, t in enumerate(T):
             if t in sw1.years and j > 0:
 
+                if t != 2000:
+                    continue
+
                 fig, ax = plt.subplots(2, 2)
 
                 meassw = np.asarray(sw1.meas['SW'][t])
@@ -45,10 +51,10 @@ def comp_ks_plots(plots1, plots2, flavour):
                 # spruce
                 weights = 1e4 / sw1.plot_size * (dx/4) * np.ones(meassw.shape)
                 ax[0,0].hist(meassw, bins=N/4, weights=weights,
-                             histtype='stepfilled', color='0.5', edgecolor='0.5')
+                             histtype='stepfilled', color='0.75', edgecolor='0.75')
 
                 ax[0,0].plot(sw1.x, nsw1[j], color='r', linestyle='-', linewidth=1)
-                ax[0,0].plot(sw2.x, nsw2[j], color='b', linestyle='-', linewidth=1)
+                ax[0,0].plot(sw2.x, nsw2[j], color='b', linestyle=':', linewidth=1)
 
                 # ax[0,0].legend(loc='best')
                 ax[0,0].set_ylabel('stems per hectare')
@@ -60,10 +66,10 @@ def comp_ks_plots(plots1, plots2, flavour):
                 # aspen
                 weights = 1e4 / aw1.plot_size * (dx/4) * np.ones(measaw.shape)
                 ax[0,1].hist(measaw, bins=N/4, weights=weights,
-                             histtype='stepfilled', color='0.5', edgecolor='0.5')
+                             histtype='stepfilled', color='0.75', edgecolor='0.75')
 
                 ax[0,1].plot(aw1.x, naw1[j], color='r', linestyle='-', linewidth=1)
-                ax[0,1].plot(aw2.x, naw2[j], color='b', linestyle='-', linewidth=1)
+                ax[0,1].plot(aw2.x, naw2[j], color='b', linestyle=':', linewidth=1)
 
                 ax[0,1].set_ylim(0, ytop)
                 ax[0,1].set_title('aspen')
@@ -74,13 +80,13 @@ def comp_ks_plots(plots1, plots2, flavour):
                 # spruce ks
                 ccdf, dcdf, d, p = ks1(sw1.meas['SW'][t], nsw1[j], x)
                 z = np.sort(sw1.meas['SW'][t])
-                ax[1,0].plot(z, dcdf, color='0.5', linestyle='--', linewidth=2)
+                ax[1,0].plot(z, dcdf, color='0.75', linestyle='--', linewidth=2)
                 ax[1,0].plot(z, ccdf, '-r')
 
                 ccdf, dcdf, d, p = ks1(sw1.meas['SW'][t], nsw2[j], x)
-                ax[1,0].plot(z, ccdf, '-b')
+                ax[1,0].plot(z, ccdf, ':b')
 
-                ax[1,0].set_xlabel('dbh')
+                ax[1,0].set_xlabel('dbh (mm)')
                 ax[1,0].set_ylabel('cdf')
 
                 ax[1,0].set_xlim(L, U)
@@ -90,14 +96,14 @@ def comp_ks_plots(plots1, plots2, flavour):
                 ccdf, dcdf, d, p = ks1(aw1.meas['AW'][t], naw1[j], x)
                 z = np.sort(aw1.meas['AW'][t])
 
-                ax[1,1].plot(z, dcdf, color='0.5', linestyle='--', linewidth=2, label='meas.')
-                ax[1,1].plot(z, ccdf, '-r', label='w/ comp.')
+                ax[1,1].plot(z, dcdf, color='0.75', linestyle='--', linewidth=2, label='data')
+                ax[1,1].plot(z, ccdf, '-r', label='w/ competition')
 
                 ccdf, dcdf, d, p = ks1(aw1.meas['AW'][t], naw2[j], x)
 
-                ax[1,1].plot(z, ccdf, '-b', label='w/o comp.')
+                ax[1,1].plot(z, ccdf, ':b', label='w/o competition')
 
-                ax[1,1].set_xlabel('dbh')
+                ax[1,1].set_xlabel('dbh (mm)')
                 ax[1,1].set_ylabel('cdf')
 
                 ax[1,1].set_xlim(L, U)
@@ -109,6 +115,7 @@ def comp_ks_plots(plots1, plots2, flavour):
 
 
                 fig.savefig('plots/projkscomp_%s_%d.png' % (plotname, t))
+                fig.savefig('plots/projkscomp_%s_%d.pdf' % (plotname, t))
                 # plt.show()
                 plt.close()
 
