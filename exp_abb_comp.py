@@ -80,7 +80,7 @@ def comp_ks_plots(plots1, plots2, flavour):
                 ccdf, dcdf, d, p = ks1(sw1.meas['SW'][t], nsw2[j], x)
                 ax[1,0].plot(z, ccdf, '-b')
 
-                ax[1,0].set_xlabel('dbh')
+                ax[1,0].set_xlabel('dbh (mm)')
                 ax[1,0].set_ylabel('cdf')
 
                 ax[1,0].set_xlim(L, U)
@@ -97,7 +97,7 @@ def comp_ks_plots(plots1, plots2, flavour):
 
                 ax[1,1].plot(z, ccdf, '-b', label='w/o comp.')
 
-                ax[1,1].set_xlabel('dbh')
+                ax[1,1].set_xlabel('dbh (mm)')
                 ax[1,1].set_ylabel('cdf')
 
                 ax[1,1].set_xlim(L, U)

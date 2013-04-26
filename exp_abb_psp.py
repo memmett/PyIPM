@@ -59,6 +59,7 @@ ax[1].set_title('Aspen')
 ax[1].set_xlabel('dbh (mm)')
 
 fig.savefig('plots/pspdbhhist.png')
+fig.savefig('plots/pspdbhhist.pdf')
 
 # sph plots
 plt.figure()
@@ -74,10 +75,12 @@ plt.bar(x, sph['sw'][idx], width, color='black', label='spruce')
 plt.bar(x+width, sph['aw'][idx], width, color='white', hatch='/', label='aspen')
 
 plt.xlabel('psp')
+plt.gca().xaxis.set_ticklabels([])
 plt.ylabel('sph (#/ha)')
 plt.legend(loc='best')
 
 plt.savefig('plots/pspsph.png')
+plt.savefig('plots/pspsph.pdf')
 
 plt.show()
 

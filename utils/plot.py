@@ -3,6 +3,8 @@
 import numpy as np
 import matplotlib.pylab as plt
 
+from collections import defaultdict
+
 def unpack(errs):
     pop = []
     growth = []
@@ -11,6 +13,14 @@ def unpack(errs):
         growth.append(err[1])
 
     return np.asarray(pop), np.asarray(growth)
+
+
+method_names = {
+    'Zuidema':             'ZB2B',
+    'GENClarkGL(9)':       'GENB2BGL(9)',
+    'INTClarkGL(9)':       'INTB2BGL(9)',
+}
+
 
 linestyles = {
     'MidPoint':            '-ok',
@@ -68,20 +78,56 @@ def plot_errors(errors, mesh_sizes, linestyles=linestyles):
 
     for kernel in errors:
 
+        # error vs mesh size
+        fig, ax = plt.subplots(1, 2, sharey=True, figsize=(7, 6))
+        fig.subplots_adjust(top=0.75)
+
+        for method in sorted(errors[kernel]):
+            label = method_names.get(method, method)
+            if label.startswith('INT'): continue
+
+            errs, cnts, tims = errors[kernel][method]
+            pop, growth = unpack(errs)
+            mesh = mesh_sizes[kernel, method]
+            print kernel, method, mesh
+            print '  ', pop
+            print '  ', growth
+            ax[0].loglog(mesh, abs(pop),
+                         linestyles.get(method, '-k'), label=label)
+            ax[1].loglog(mesh, abs(growth),
+                         linestyles.get(method, '-k'), label=label)
+
+        ax[0].set_title('population error')
+        ax[1].set_title('growth rate error')
+        ax[0].set_ylabel('absolute error')
+        for a in ax:
+          a.set_xlabel('mesh size')
+
+        plt.ylim(1e-16, 1e1)
+        plt.legend(bbox_to_anchor=(0.5, 0.8), loc=8, ncol=3, borderaxespad=0.0,
+                   bbox_transform=fig.transFigure)
+
+        plt.savefig('plots/ErrorMesh_%s.pdf' % kernel)
+        plt.savefig('plots/ErrorMesh_%s.png' % kernel, dpi=600)
+
+
         # error vs computational cost
         fig, ax = plt.subplots(1, 2, sharey=True, figsize=(7, 6))
         fig.subplots_adjust(top=0.75)
 
         for method in sorted(errors[kernel]):
+            label = method_names.get(method, method)
+            if label.startswith('INT'): continue
+
             errs, cnts, tims = errors[kernel][method]
             pop, growth = unpack(errs)
             print kernel, method
             print '  ', pop
             print '  ', growth
             ax[0].loglog(cnts, abs(pop),
-                         linestyles.get(method, '-k'), label=method)
+                         linestyles.get(method, '-k'), label=label)
             ax[1].loglog(cnts, abs(growth),
-                         linestyles.get(method, '-k'), label=method)
+                         linestyles.get(method, '-k'), label=label)
 
         ax[0].set_title('population error')
         ax[1].set_title('growth rate error')
@@ -93,7 +139,8 @@ def plot_errors(errors, mesh_sizes, linestyles=linestyles):
         plt.legend(bbox_to_anchor=(0.5, 0.8), loc=8, ncol=3, borderaxespad=0.0,
                    bbox_transform=fig.transFigure)
 
-        plt.savefig('plots/ErrorCost_%s.png' % kernel)
+        plt.savefig('plots/ErrorCost_%s.pdf' % kernel)
+        plt.savefig('plots/ErrorCost_%s.png' % kernel, dpi=600)
 
         # error vs run time
         fig, ax = plt.subplots(1, 2, sharey=True, figsize=(7, 6))
@@ -106,9 +153,9 @@ def plot_errors(errors, mesh_sizes, linestyles=linestyles):
             tims[ tims <= 0.0 ] = 1e-4
             # if not np.any(tims <= 0.0):
             ax[0].loglog(np.asarray(tims), abs(pop),
-                         linestyles.get(method, '-k'), label=method)
+                         linestyles.get(method, '-k'), label=method_names.get(method, method))
             ax[1].loglog(np.asarray(tims), abs(growth),
-                         linestyles.get(method, '-k'), label=method)
+                         linestyles.get(method, '-k'), label=method_names.get(method, method))
 
         ax[0].set_title('population error')
         ax[1].set_title('growth rate error')
@@ -120,4 +167,5 @@ def plot_errors(errors, mesh_sizes, linestyles=linestyles):
         plt.legend(bbox_to_anchor=(0.5, 0.8), loc=8, ncol=3, borderaxespad=0.0,
                    bbox_transform=fig.transFigure)
 
-        plt.savefig('plots/ErrorTime_%s.png' % kernel)
+        plt.savefig('plots/ErrorTime_%s.pdf' % kernel)
+        plt.savefig('plots/ErrorTime_%s.png' % kernel, dpi=600)
