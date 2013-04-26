@@ -43,6 +43,7 @@ ax[1].set_title('Aspen')
 ax[1].set_xlabel('dbh (mm)')
 
 fig.savefig('plots/retrodbhhist.png')
+fig.savefig('plots/retrodbhhist.pdf')
 
 
 # sph plots
@@ -60,11 +61,13 @@ width = 0.35
 plt.bar(x, sph['sw'][idx], width, color='black', label='spruce')
 plt.bar(x+width, sph['aw'][idx], width, color='white', hatch='/', label='aspen')
 
-plt.xlabel('psp')
+plt.xlabel('transect')
+plt.gca().xaxis.set_ticklabels([])
 plt.ylabel('sph (#/ha)')
 plt.legend(loc='best')
 
 plt.savefig('plots/retrosph.png')
+plt.savefig('plots/retrosph.pdf')
 
 
 plt.show()
